@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer le gestionnaire de filtration piscine",
+        "description": "Associez vos entités Home Assistant à la pompe et aux capteurs.",
+        "data": {
+          "pump_switch": "Switch de la pompe de filtration",
+          "water_temp_sensor": "Capteur de température de l'eau",
+          "solar_power_sensor": "Capteur de production solaire (W)",
+          "grid_consumption_sensor": "Capteur de consommation réseau (optionnel)",
+          "tempo_color_sensor": "Capteur couleur Tempo (ex: sensor.rte_tempo_couleur_actuelle)",
+          "tempo_hc_sensor": "Capteur Heures Creuses Tempo (ex: binary_sensor.rte_tempo_heures_creuses)",
+          "water_heater_temp_sensor": "Capteur température ballon ECS — MSunPV (optionnel, priorité sur la pompe)"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "Cette entité est introuvable dans Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Ce contrôleur est déjà configuré."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options avancées",
+        "data": {
+          "min_solar_power": "Production solaire minimale pour activer la pompe (W)",
+          "solar_priority": "Priorité à l'énergie solaire",
+          "min_daily_duration": "Durée minimale de filtration par jour (h)",
+          "max_daily_duration": "Durée maximale de filtration par jour (h)",
+          "filtration_start_hour": "Heure de début de filtration",
+          "filtration_end_hour": "Heure de fin de filtration",
+          "tempo_allow_blanc_hp": "Jour Blanc HP : autoriser la pompe sur réseau (sans solaire)",
+          "tempo_allow_rouge_hc": "Jour Rouge HC : autoriser la pompe (tarif HC seulement)",
+          "tempo_allow_rouge_hp": "Jour Rouge HP : autoriser la pompe sur réseau (déconseillé)",
+          "pump_power_w": "Puissance de la pompe (W) — utilisée pour le calcul du surplus jour Rouge",
+          "rouge_surplus_margin_w": "Marge de sécurité surplus jour Rouge (W) — évite les micro-soutirages",
+          "water_heater_min_temp": "Température minimale du ballon ECS avant d'autoriser la pompe (°C)",
+          "water_heater_hysteresis": "Hystérésis ballon ECS (°C) — évite les oscillations de la pompe"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Pool Filtration — Home Assistant Dev",
+
+  // Image Python officielle Microsoft — disponible et maintenue
+  // HA Core est installé via pip dans requirements_dev.txt
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+
+  // Installation des dépendances après création du container
+  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements_dev.txt && pip install homeassistant",
+
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant UI",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "esbenp.prettier-vscode",
+        "redhat.vscode-yaml",
+        "keesschollaart.vscode-home-assistant",
+        "ms-python.mypy-type-checker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python3",
+        "editor.formatOnSave": true,
+        "editor.rulers": [88],
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter"
+        },
+        "homeassistant.ignoreCertificates": true
+      }
+    }
+  },
+
+  "remoteUser": "vscode"
+}

@@ -1,0 +1,28 @@
+{
+  "python.defaultInterpreterPath": "/usr/local/bin/python3",
+  "editor.formatOnSave": true,
+  "editor.rulers": [88],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "ruff.enable": true,
+  "ruff.lint.args": ["--select=E,F,W,I,UP"],
+  "mypy-type-checker.args": [
+    "--ignore-missing-imports",
+    "--allow-untyped-defs"
+  ],
+  "files.associations": {
+    "*.yaml": "yaml",
+    "*.json": "json"
+  },
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/home-assistant/home-assistant/master/homeassistant/components/lovelace/configuration.schema.json": "config/ui-lovelace.yaml"
+  },
+  "homeassistant.host": "localhost",
+  "homeassistant.port": 8123,
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/node_modules": true
+  }
+}

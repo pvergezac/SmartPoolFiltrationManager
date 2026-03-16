@@ -1,0 +1,45 @@
+# Configuration Home Assistant minimale pour le développement local
+# Cette instance HA tourne dans le DevContainer
+
+default_config:
+
+# Expose notre custom component
+logger:
+  default: info
+  logs:
+    custom_components.pool_filtration: debug
+
+# Entités fictives pour tester sans vrai matériel
+template:
+  - sensor:
+      - name: "Temperature Piscine (simulée)"
+        unit_of_measurement: "°C"
+        state: "24.5"
+        device_class: temperature
+
+      - name: "Production Solaire (simulée)"
+        unit_of_measurement: "W"
+        device_class: power
+        state: "1800"
+
+      - name: "Consommation Réseau (simulée)"
+        unit_of_measurement: "W"
+        device_class: power
+        state: "320"
+
+  - switch:
+      - name: "Pompe Piscine (simulée)"
+        value_template: "{{ states('input_boolean.pompe_piscine_sim') }}"
+        turn_on:
+          service: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.pompe_piscine_sim
+        turn_off:
+          service: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.pompe_piscine_sim
+
+input_boolean:
+  pompe_piscine_sim:
+    name: "État pompe piscine (sim)"
+    initial: false

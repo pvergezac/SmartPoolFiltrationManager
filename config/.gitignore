@@ -1,0 +1,6 @@
+# HA config files and directories créated by local debuging in devcontainer.
+.*/
+*/
+.HA_VERSION
+.ha_run.lock
+home-assistant*.*
