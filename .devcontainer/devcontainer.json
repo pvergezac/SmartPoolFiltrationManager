@@ -25,7 +25,8 @@
         "esbenp.prettier-vscode",
         "redhat.vscode-yaml",
         "keesschollaart.vscode-home-assistant",
-        "ms-python.mypy-type-checker"
+        "ms-python.mypy-type-checker",
+        "bierner.markdown-preview-github-styles"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python3",
