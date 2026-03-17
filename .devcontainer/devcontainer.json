@@ -26,7 +26,8 @@
         "redhat.vscode-yaml",
         "keesschollaart.vscode-home-assistant",
         "ms-python.mypy-type-checker",
-        "bierner.markdown-preview-github-styles"
+        "bierner.markdown-preview-github-styles",
+        "adrienjoly.vscode-spellchecker-fr"
       ],
       "settings": {
         "python.defaultInterpreterPath": "/usr/local/bin/python3",
