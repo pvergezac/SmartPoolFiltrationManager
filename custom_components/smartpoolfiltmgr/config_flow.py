@@ -74,7 +74,7 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_WATER_TEMP_SENSOR): selector.EntitySelector(
                     selector.EntitySelectorConfig(
                         domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN],
-                        device_class="temperature",
+                        # device_class="temperature",
                     )
                 ),
                 vol.Required(CONF_SOLAR_POWER_SENSOR): selector.EntitySelector(
