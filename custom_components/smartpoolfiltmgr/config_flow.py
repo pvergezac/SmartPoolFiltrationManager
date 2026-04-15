@@ -4,44 +4,48 @@ from __future__ import annotations
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
 from .const import (
-    DOMAIN,
-    CONF_PUMP_SWITCH,
-    CONF_WATER_TEMP_SENSOR,
-    CONF_SOLAR_POWER_SENSOR,
+    CONF_FILTRATION_END_HOUR,
+    CONF_FILTRATION_START_HOUR,
     CONF_GRID_CONSUMPTION_SENSOR,
+    CONF_MAX_DAILY_DURATION,
+    CONF_MIN_DAILY_DURATION,
+    CONF_MIN_SOLAR_POWER,
+    CONF_PUMP_POWER_W,
+    CONF_PUMP_SWITCH,
+    CONF_ROUGE_SURPLUS_MARGIN_W,
+    CONF_SOLAR_POWER_SENSOR,
+    CONF_SOLAR_PRIORITY,
+    CONF_TEMPO_ALLOW_BLANC_HP,
+    CONF_TEMPO_ALLOW_ROUGE_HC,
+    CONF_TEMPO_ALLOW_ROUGE_HP,
     CONF_TEMPO_COLOR_SENSOR,
     CONF_TEMPO_HC_SENSOR,
-    CONF_WATER_HEATER_TEMP_SENSOR,
-    CONF_MIN_SOLAR_POWER,
-    CONF_SOLAR_PRIORITY,
-    CONF_MIN_DAILY_DURATION,
-    CONF_MAX_DAILY_DURATION,
-    CONF_FILTRATION_START_HOUR,
-    CONF_FILTRATION_END_HOUR,
-    CONF_TEMPO_ALLOW_BLANC_HP,
-    CONF_TEMPO_ALLOW_ROUGE_HP,
-    CONF_TEMPO_ALLOW_ROUGE_HC,
-    CONF_PUMP_POWER_W,
-    CONF_ROUGE_SURPLUS_MARGIN_W,
-    CONF_WATER_HEATER_MIN_TEMP,
     CONF_WATER_HEATER_HYSTERESIS,
-    DEFAULT_MIN_SOLAR_POWER,
-    DEFAULT_SOLAR_PRIORITY,
-    DEFAULT_MIN_DAILY_DURATION,
-    DEFAULT_MAX_DAILY_DURATION,
-    DEFAULT_FILTRATION_START_HOUR,
+    CONF_WATER_HEATER_MIN_TEMP,
+    CONF_WATER_HEATER_TEMP_SENSOR,
+    CONF_WATER_TEMP_SENSOR,
     DEFAULT_FILTRATION_END_HOUR,
-    DEFAULT_TEMPO_ALLOW_BLANC_HP,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HP,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HC,
+    DEFAULT_FILTRATION_START_HOUR,
+    DEFAULT_MAX_DAILY_DURATION,
+    DEFAULT_MIN_DAILY_DURATION,
+    DEFAULT_MIN_SOLAR_POWER,
     DEFAULT_PUMP_POWER_W,
     DEFAULT_ROUGE_SURPLUS_MARGIN_W,
-    DEFAULT_WATER_HEATER_MIN_TEMP,
+    DEFAULT_SOLAR_PRIORITY,
+    DEFAULT_TEMPO_ALLOW_BLANC_HP,
+    DEFAULT_TEMPO_ALLOW_ROUGE_HC,
+    DEFAULT_TEMPO_ALLOW_ROUGE_HP,
     DEFAULT_WATER_HEATER_HYSTERESIS,
+    DEFAULT_WATER_HEATER_MIN_TEMP,
+    DOMAIN,
 )
 
 
@@ -65,30 +69,36 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_PUMP_SWITCH): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="switch")
+                    selector.EntitySelectorConfig(domain=[SWITCH_DOMAIN])
                 ),
                 vol.Required(CONF_WATER_TEMP_SENSOR): selector.EntitySelector(
                     selector.EntitySelectorConfig(
-                        domain="sensor", device_class="temperature"
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN],
+                        device_class="temperature",
                     )
                 ),
                 vol.Required(CONF_SOLAR_POWER_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor", device_class="power")
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN], device_class="power"
+                    )
                 ),
                 vol.Optional(CONF_GRID_CONSUMPTION_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor", device_class="power")
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN], device_class="power"
+                    )
                 ),
                 # Tempo RTE — optionnel mais recommandé
                 vol.Optional(CONF_TEMPO_COLOR_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="sensor")
+                    selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN])
                 ),
                 vol.Optional(CONF_TEMPO_HC_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="binary_sensor")
+                    selector.EntitySelectorConfig(domain=[BINARY_SENSOR_DOMAIN])
                 ),
                 # Ballon ECS (MSunPV) — optionnel, priorité sur la pompe
                 vol.Optional(CONF_WATER_HEATER_TEMP_SENSOR): selector.EntitySelector(
                     selector.EntitySelectorConfig(
-                        domain="sensor", device_class="temperature"
+                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN],
+                        device_class="temperature",
                     )
                 ),
             }
