@@ -6,7 +6,7 @@
   "image": "mcr.microsoft.com/devcontainers/python:3.14",
 
   // Installation des dépendances après création du container
-  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements_dev.txt",
+  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
 
   "forwardPorts": [8123],
   "portsAttributes": {
