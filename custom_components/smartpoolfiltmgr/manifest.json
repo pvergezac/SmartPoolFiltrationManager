@@ -1,12 +1,12 @@
 {
   "domain": "smartpoolfiltmgr",
   "name": "Smart Pool Filtration Manager",
-  "version": "0.0.1",
-  "documentation": "https://github.com/pvergezac/SmartPoolFiltrationManager",
-  "issue_tracker": "https://github.com/pvergezac/SmartPoolFiltrationManager/issues",
-  "dependencies": [],
   "codeowners": ["@pvergezac"],
-  "requirements": [],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/pvergezac/SmartPoolFiltrationManager",
   "iot_class": "local_push",
-  "config_flow": true
+  "issue_tracker": "https://github.com/pvergezac/SmartPoolFiltrationManager/issues",
+  "requirements": [],
+  "version": "0.0.1"
 }
