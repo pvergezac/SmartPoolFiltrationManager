@@ -1,4 +1,5 @@
 """Tests pour le coordinateur Pool Filtration."""
+
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 from datetime import date
@@ -8,13 +9,17 @@ from custom_components.pool_filtration.coordinator import (
     PoolFiltrationCoordinator,
 )
 from custom_components.pool_filtration.const import (
-    MODE_AUTO, MODE_SOLAR, MODE_OFF, MODE_MANUAL,
+    MODE_AUTO,
+    MODE_SOLAR,
+    MODE_OFF,
+    MODE_MANUAL,
 )
 
 
 # ------------------------------------------------------------------
 # Tests calculate_target_duration
 # ------------------------------------------------------------------
+
 
 class TestCalculateTargetDuration:
     def test_cold_water_minimum(self):
@@ -49,6 +54,7 @@ class TestCalculateTargetDuration:
 # ------------------------------------------------------------------
 # Tests coordinator decision logic
 # ------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_hass():
@@ -114,6 +120,7 @@ class TestShouldPumpRun:
             if "solaire" in entity_id:
                 return self._make_state(solar)
             return None
+
         coordinator.hass.states.get = get_state
 
     def test_mode_off_never_runs(self, coordinator):
@@ -154,7 +161,7 @@ class TestShouldPumpRun:
         self._setup_sensors(coordinator)
         with patch("custom_components.pool_filtration.coordinator.dt_util") as mock_dt:
             mock_now = MagicMock()
-            mock_now.hour = 3   # 3h du matin, hors plage
+            mock_now.hour = 3  # 3h du matin, hors plage
             mock_now.minute = 0
             mock_dt.now.return_value = mock_now
             assert coordinator._should_pump_run() is False
@@ -163,6 +170,7 @@ class TestShouldPumpRun:
 class TestDailyReset:
     def test_resets_on_new_day(self, coordinator):
         from datetime import date
+
         coordinator._daily_runtime_minutes = 250.0
         coordinator._solar_contribution_minutes = 120.0
         coordinator._last_reset_date = date(2024, 1, 1)
@@ -176,6 +184,7 @@ class TestDailyReset:
 
             # Simuler un nouveau jour
             from homeassistant.util import dt as real_dt
+
             today = real_dt.now().date()
             coordinator._last_reset_date = date(2000, 1, 1)  # vieille date
             coordinator._check_daily_reset()

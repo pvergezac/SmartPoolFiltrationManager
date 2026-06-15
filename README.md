@@ -1,4 +1,8 @@
+<div align="center">
+
 # 🏊 Smart Pool Filtration Manager — Custom Component Home Assistant
+
+**Contrôle intelligent de la pompe de filtration de la piscine.**
 
 ![Home Assistant](https://img.shields.io/badge/home%20assistant-%2341BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white) [![Hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs) ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 
@@ -11,11 +15,17 @@
 [![GitHub stars](https://badgen.net/github/stars/pvergezac/smartpoolfiltrationmanager)](https://GitHub.com/pvergezac/SmartPoolFiltrationManager/stargazers/)
 ![GitHub Repo stars](https://img.shields.io/github/stars/pvergezac/SmartPoolFiltrationManager)
 
-Contrôle intelligent de la pompe de filtration piscine selon la **température de l'eau** et la **production solaire photovoltaïque**, ainsi que la couleur du jour et plage horaire **EDF Tempo** (intégration RTE Tempo nécessaire).
+</div>
 
 ---
 
-## Fonctionnalités
+## 📋 Description
+
+**Smart Pool Filtration Manager** est une intégration personnalisée pour **Home Assistant** qui permet de controler la pompe de filtration de la piscine selon la **température de l'eau**, la **production solaire photovoltaïque**, la couleur du jour et plage horaire **EDF Tempo** (intégration RTE Tempo nécessaire) afin d'optimiser l'utilisation de l'energie solaire et des tarifs préférentiels, tout en privilégiant les autres besoins en energie de la maison.
+
+---
+
+## ✨ Fonctionnalités
 
 - ⏱️ **Durée calculée automatiquement** selon la règle T°/2 (ex : 24°C → 6h de filtration)
 - ☀️ **Priorité solaire** : la pompe tourne en priorité quand les panneaux produisent suffisamment
@@ -26,23 +36,53 @@ Contrôle intelligent de la pompe de filtration piscine selon la **température 
 
 ---
 
-## Installation
+## 📦 Installation via HACS (recommandé)
 
-### Via HACS (recommandé)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=pvergezac&repository=SmartPoolFiltrationManager=integration)
 
-1. Dans HACS → Intégrations → ⋮ → Dépôts personnalisés
-2. Ajouter : `https://github.com/pvergezac/SmartPoolFiltrationManager` (type : Intégration)
-3. Installer "Smart Pool Filtration Manager"
-4. Redémarrer Home Assistant
+### Prérequis
 
-### Manuel
+- Home Assistant version 2025.2.4 ou supérieure
+- [HACS installé](https://hacs.xyz/docs/setup/download) sur votre instance Home Assistant
+
+### Étape 1 — Ajouter le dépôt personnalisé dans HACS
+
+> HACS ne référence pas encore ce dépôt par défaut. Ajoutez-le manuellement.
+
+1. Dans Home Assistant, ouvrez **HACS** dans la barre latérale
+2. Cliquez sur les **⋮** (trois points) en haut à droite
+3. Sélectionnez **Dépôts personnalisés**
+4. Dans le champ **Dépôt**, saisissez l'URL du dépôt GitHub :
+   ```
+   https://github.com/pvergezac/SmartPoolFiltrationManager
+   ```
+5. Dans **Catégorie**, sélectionnez **Intégration**
+6. Cliquez sur **Ajouter**
+
+### Étape 2 — Installer l'intégration
+
+1. Toujours dans HACS, allez dans **Intégrations**
+2. Cliquez sur **+ Explorer et télécharger des dépôts**
+3. Recherchez **Smart Pool Filtration Manager**
+4. Cliquez sur le résultat puis sur **Télécharger**
+5. Confirmez en cliquant sur **Télécharger** dans la fenêtre de confirmation
+
+### Étape 3 — Redémarrer Home Assistant
+
+Après l'installation, un redémarrage est nécessaire :
+
+**Paramètres → Système → Redémarrer → Redémarrer Home Assistant**
+
+Attendez que Home Assistant soit complètement redémarré avant de continuer.
+
+## 🔧 Installation Manuel
 
 1. Copier le dossier `custom_components/smartpoolfiltmgr/` dans votre dossier `config/custom_components/`
 2. Redémarrer Home Assistant
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 ### Étape 1 — Ajouter l'intégration
 
@@ -160,7 +200,7 @@ cards:
 
 ---
 
-## Dépannage
+## 🛠️ Dépannage
 
 **La pompe ne démarre pas malgré du solaire disponible**
 → Vérifier que la production dépasse le seuil configuré (défaut 500W)
@@ -174,6 +214,18 @@ cards:
 
 ---
 
-## Licence
+## 🤝 Contribution
 
-MIT — Libre d'utilisation et de modification.
+Les contributions sont les bienvenues ! Pour signaler un bug ou proposer une amélioration, ouvrez une [issue](https://github.com/pvergezac/SmartPoolFiltrationManager/issues) sur GitHub.
+
+---
+
+## 📄 Licence
+
+Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+---
+
+<div align="center">
+Fait avec ❤️ pour la communauté Home Assistant francophone
+</div>

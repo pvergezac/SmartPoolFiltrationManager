@@ -1,4 +1,5 @@
 """Select entity for Pool Filtration operating mode."""
+
 from __future__ import annotations
 
 from homeassistant.components.select import SelectEntity
@@ -7,14 +8,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MODE_AUTO, MODE_SOLAR, MODE_MANUAL, MODE_OFF
+from .const import DOMAIN, MODE_AUTO, MODE_MANUAL, MODE_OFF, MODE_SOLAR
 from .coordinator import PoolFiltrationCoordinator
 
 MODE_OPTIONS = {
-    MODE_AUTO:   "🤖 Automatique",
-    MODE_SOLAR:  "☀️ Solaire uniquement",
+    MODE_AUTO: "🤖 Automatique",
+    MODE_SOLAR: "☀️ Solaire uniquement",
     MODE_MANUAL: "🔧 Manuel",
-    MODE_OFF:    "⛔ Arrêt forcé",
+    MODE_OFF: "⛔ Arrêt forcé",
 }
 
 
@@ -34,7 +35,9 @@ class PoolModeSelect(CoordinatorEntity, SelectEntity):
     _attr_icon = "mdi:cog-outline"
     _attr_options = list(MODE_OPTIONS.values())
 
-    def __init__(self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator)
         self._entry = entry
 
@@ -58,8 +61,5 @@ class PoolModeSelect(CoordinatorEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change mode when user selects from dropdown."""
         # Reverse lookup: label → key
-        mode_key = next(
-            (k for k, v in MODE_OPTIONS.items() if v == option),
-            MODE_AUTO
-        )
+        mode_key = next((k for k, v in MODE_OPTIONS.items() if v == option), MODE_AUTO)
         await self.coordinator.set_mode(mode_key)

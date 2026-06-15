@@ -1,4 +1,5 @@
 """Switch entity for Pool Filtration manual override."""
+
 from __future__ import annotations
 
 from homeassistant.components.switch import SwitchEntity
@@ -7,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MODE_MANUAL, MODE_AUTO
+from .const import DOMAIN, MODE_AUTO, MODE_MANUAL
 from .coordinator import PoolFiltrationCoordinator
 
 
@@ -26,7 +27,9 @@ class PoolManualOverrideSwitch(CoordinatorEntity, SwitchEntity):
     _attr_name = "Pool Filtration — Forçage manuel"
     _attr_icon = "mdi:water-pump"
 
-    def __init__(self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator)
         self._entry = entry
 
@@ -45,10 +48,7 @@ class PoolManualOverrideSwitch(CoordinatorEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return True if manual pump override is active and pump should be on."""
         data = self.coordinator.data or {}
-        return (
-            data.get("mode") == MODE_MANUAL
-            and data.get("pump_running", False)
-        )
+        return data.get("mode") == MODE_MANUAL and data.get("pump_running", False)
 
     @property
     def extra_state_attributes(self):
@@ -56,7 +56,7 @@ class PoolManualOverrideSwitch(CoordinatorEntity, SwitchEntity):
         return {
             "mode": data.get("mode"),
             "note": "Activating this switch sets mode to MANUAL and forces the pump ON. "
-                    "Deactivating returns to AUTO mode.",
+            "Deactivating returns to AUTO mode.",
         }
 
     async def async_turn_on(self, **kwargs):

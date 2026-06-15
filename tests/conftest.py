@@ -1,4 +1,5 @@
 """Fixtures partagées pour les tests Pool Filtration."""
+
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.pool_filtration.const import DOMAIN

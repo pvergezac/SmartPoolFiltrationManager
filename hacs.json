@@ -1,6 +1,6 @@
 {
     "name": "Smart Pool Filtration Manager",
     "render_readme": true,
-    "homeassistant": "2026.2.1",
+    "homeassistant": "2025.2.4",
     "hacs": "2.0.1"
 }

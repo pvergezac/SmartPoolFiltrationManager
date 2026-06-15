@@ -1,9 +1,9 @@
 {
-  "name": "Pool Filtration — Home Assistant Dev",
+  "name": "SmartPoolFiltration DevEnv",
 
   // Image Python officielle Microsoft — disponible et maintenue
   // HA Core est installé via pip dans requirements_dev.txt
-  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "image": "mcr.microsoft.com/devcontainers/python:3.14",
 
   // Installation des dépendances après création du container
   "postCreateCommand": "pip install --upgrade pip && pip install -r requirements_dev.txt && pip install homeassistant",
@@ -19,22 +19,51 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-python.python",
-        "ms-python.black-formatter",
         "charliermarsh.ruff",
+        "github.vscode-pull-request-github",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.isort",
+        "ms-python.pylint",
+        "ms-python.black-formatter",
+        "ms-python.mypy-type-checker",
+        "donjayamanne.githistory",
+        "ryanluker.vscode-coverage-gutters",
+        "yzhang.markdown-all-in-one",
+
         "esbenp.prettier-vscode",
         "redhat.vscode-yaml",
         "keesschollaart.vscode-home-assistant",
-        "ms-python.mypy-type-checker",
         "bierner.markdown-preview-github-styles",
         "adrienjoly.vscode-spellchecker-fr"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python3",
+        "files.eol": "\n",
+        "editor.tabSize": 4,
+        "terminal.integrated.profiles.linux": {
+            "Bash Profile": {
+                "path": "bash",
+                "args": []
+            }
+        },
+        "terminal.integrated.defaultProfile.linux": "bash",
+
+        "python.formatting.provider": "black",
+        "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
-        "editor.rulers": [88],
+        "editor.formatOnType": true,
+        "files.trimTrailingWhitespace": true,
+
+        "python.pythonPath": "/usr/bin/python3",
+        "python.analysis.autoSearchPaths": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.enabled": true,
+        
+        "python.analysis.typeCheckingMode": "basic",
+        "python.analysis.autoImportCompletions": true,
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
         "[python]": {
-          "editor.defaultFormatter": "ms-python.black-formatter"
+            "editor.defaultFormatter": "charliermarsh.ruff"
         },
         "homeassistant.ignoreCertificates": true
       }

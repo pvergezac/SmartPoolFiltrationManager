@@ -1,11 +1,10 @@
 """Sensors for Smart Pool Filtration Manager."""
+
 from __future__ import annotations
 
-from typing import Optional
-
 from homeassistant.components.sensor import (
-    SensorEntity,
     SensorDeviceClass,
+    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,15 +21,18 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up SmartPollFiltrationManager sensors."""
     coordinator: PoolFiltrationCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([
-        PoolDailyRuntimeSensor(coordinator, entry),
-        PoolTargetDurationSensor(coordinator, entry),
-        PoolSolarContributionSensor(coordinator, entry),
-        PoolModeSensor(coordinator, entry),
-        PoolTempoSensor(coordinator, entry),
-        PoolWaterHeaterSensor(coordinator, entry),
-    ])
+    async_add_entities(
+        [
+            PoolDailyRuntimeSensor(coordinator, entry),
+            PoolTargetDurationSensor(coordinator, entry),
+            PoolSolarContributionSensor(coordinator, entry),
+            PoolModeSensor(coordinator, entry),
+            PoolTempoSensor(coordinator, entry),
+            PoolWaterHeaterSensor(coordinator, entry),
+        ]
+    )
 
 
 class PoolBaseSensor(CoordinatorEntity, SensorEntity):
@@ -53,7 +55,7 @@ class PoolBaseSensor(CoordinatorEntity, SensorEntity):
 class PoolDailyRuntimeSensor(PoolBaseSensor):
     """Minutes of filtration done today."""
 
-    _attr_name = "Pool Filtration — Durée journalière"
+    _attr_name = "Durée filtration réalisée"
     _attr_icon = "mdi:timer"
     _attr_native_unit_of_measurement = "min"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -75,8 +77,13 @@ class PoolDailyRuntimeSensor(PoolBaseSensor):
         return {
             "target_minutes": round(data.get("target_duration_minutes", 0), 1),
             "progress_pct": round(
-                min(100, data.get("daily_runtime_minutes", 0) /
-                    max(1, data.get("target_duration_minutes", 1)) * 100), 1
+                min(
+                    100,
+                    data.get("daily_runtime_minutes", 0)
+                    / max(1, data.get("target_duration_minutes", 1))
+                    * 100,
+                ),
+                1,
             ),
             "solar_contribution_minutes": round(data.get("solar_contribution_minutes", 0), 1),
             "hc_contribution_minutes": round(data.get("hc_contribution_minutes", 0), 1),
@@ -87,7 +94,7 @@ class PoolDailyRuntimeSensor(PoolBaseSensor):
 class PoolTargetDurationSensor(PoolBaseSensor):
     """Target filtration duration calculated from water temperature."""
 
-    _attr_name = "Pool Filtration — Durée cible"
+    _attr_name = "Durée cible filtration"
     _attr_icon = "mdi:target"
     _attr_native_unit_of_measurement = "min"
     _attr_suggested_display_precision = 0
@@ -115,7 +122,7 @@ class PoolTargetDurationSensor(PoolBaseSensor):
 class PoolSolarContributionSensor(PoolBaseSensor):
     """Solar energy contribution to filtration today."""
 
-    _attr_name = "Pool Filtration — Contribution solaire"
+    _attr_name = "Contribution solaire"
     _attr_icon = "mdi:solar-power"
     _attr_native_unit_of_measurement = "min"
     _attr_suggested_display_precision = 0
@@ -136,7 +143,7 @@ class PoolSolarContributionSensor(PoolBaseSensor):
         runtime = data.get("daily_runtime_minutes", 0)
         solar = data.get("solar_contribution_minutes", 0)
         return {
-            "solar_percentage": round(solar / max(1, runtime) * 100, 1) if runtime > 0 else 0,
+            "solar_percentage": (round(solar / max(1, runtime) * 100, 1) if runtime > 0 else 0),
             "current_solar_power_w": data.get("solar_power"),
             "running_on_solar": data.get("solar_running", False),
         }
@@ -204,7 +211,7 @@ class PoolTempoSensor(PoolBaseSensor):
         margin = data.get("rouge_surplus_margin_w", 50)
         required = pump_power + margin
 
-        tempo_impact = _describe_tempo_impact(color, is_hc, reason)
+        tempo_impact = _describe_tempo_impact(color, reason)
 
         attrs = {
             "couleur": color,
@@ -218,19 +225,21 @@ class PoolTempoSensor(PoolBaseSensor):
 
         # Afficher les détails du surplus uniquement sur les jours rouges HP
         if color == "Rouge" and not is_hc:
-            attrs.update({
-                "surplus_solaire_w": round(surplus, 0) if surplus is not None else "N/A",
-                "puissance_pompe_w": pump_power,
-                "marge_securite_w": margin,
-                "surplus_requis_w": required,
-                "surplus_suffisant": (surplus is not None and surplus >= required),
-                "manque_w": round(max(0, required - (surplus or 0)), 0),
-            })
+            attrs.update(
+                {
+                    "surplus_solaire_w": (round(surplus, 0) if surplus is not None else "N/A"),
+                    "puissance_pompe_w": pump_power,
+                    "marge_securite_w": margin,
+                    "surplus_requis_w": required,
+                    "surplus_suffisant": (surplus is not None and surplus >= required),
+                    "manque_w": round(max(0, required - (surplus or 0)), 0),
+                }
+            )
 
         return attrs
 
 
-def _describe_tempo_impact(color: str, is_hc: Optional[bool], reason: str) -> str:
+def _describe_tempo_impact(color: str, reason: str) -> str:
     """Return a human-readable explanation of Tempo's impact on the pump."""
     if "no_tempo" in reason:
         return "Tempo non configuré — pas de restriction tarifaire"
@@ -254,7 +263,8 @@ def _describe_tempo_impact(color: str, is_hc: Optional[bool], reason: str) -> st
         # Extraire la valeur du surplus depuis le code raison
         try:
             surplus_str = reason.split("rouge_hp_surplus_ok_")[1].replace("W", "")
-            return f"Jour Rouge HP — surplus solaire suffisant ({surplus_str} W disponibles)"
+            return f"Jour Rouge HP — surplus solaire suffisant \
+                ({surplus_str} W disponibles)"
         except (IndexError, ValueError):
             return "Jour Rouge HP — surplus solaire suffisant"
     if "rouge_hp_surplus_insufficient" in reason:
@@ -262,7 +272,8 @@ def _describe_tempo_impact(color: str, is_hc: Optional[bool], reason: str) -> st
             parts = reason.split("_")
             surplus = parts[5].replace("W", "")
             needed = parts[7].replace("W", "")
-            return f"Jour Rouge HP — surplus insuffisant ({surplus} W dispo, {needed} W requis)"
+            return f"Jour Rouge HP — surplus insuffisant \
+                ({surplus} W dispo, {needed} W requis)"
         except (IndexError, ValueError):
             return "Jour Rouge HP — surplus solaire insuffisant, pompe bloquée"
     if "rouge_hp_no_sensor" in reason:
@@ -278,7 +289,7 @@ class PoolWaterHeaterSensor(PoolBaseSensor):
     required before the pool pump is allowed to claim solar surplus.
     """
 
-    _attr_name = "Pool Filtration — Priorité Ballon ECS"
+    _attr_name = "Priorité Ballon ECS sur filtration"
     _attr_icon = "mdi:water-boiler"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = "°C"
@@ -303,19 +314,22 @@ class PoolWaterHeaterSensor(PoolBaseSensor):
             return "mdi:water-boiler-off"
         unlocked = data.get("water_heater_unlocked", False)
         temp = data.get("water_heater_temp")
-        min_temp = data.get("water_heater_min_temp", 50)
+        # min_temp = data.get("water_heater_min_temp", 50)
         if temp is None:
             return "mdi:water-boiler-alert"
         if unlocked:
-            return "mdi:water-boiler-auto"   # ballon chaud, pompe autorisée
-        return "mdi:water-boiler"            # ballon en chauffe, pompe en attente
+            return "mdi:water-boiler-auto"  # ballon chaud, pompe autorisée
+        return "mdi:water-boiler"  # ballon en chauffe, pompe en attente
 
     @property
     def extra_state_attributes(self):
         data = self.coordinator.data or {}
 
         if not data.get("water_heater_configured"):
-            return {"configured": False, "note": "Capteur ballon non configuré — priorité désactivée"}
+            return {
+                "configured": False,
+                "note": "Capteur ballon non configuré — priorité désactivée",
+            }
 
         temp = data.get("water_heater_temp")
         min_temp = data.get("water_heater_min_temp", 50.0)
@@ -331,12 +345,15 @@ class PoolWaterHeaterSensor(PoolBaseSensor):
         else:
             manque = unlock_threshold - (temp or 0)
             status = (
-                f"🔥 Ballon en chauffe ({temp:.1f}°C, besoin de {unlock_threshold:.0f}°C) "
+                f"🔥 Ballon en chauffe ({temp:.1f}°C, "
+                f"besoin de {unlock_threshold:.0f}°C) "
                 f"— pompe bloquée (encore {manque:.1f}°C)"
             )
 
         # Pompe bloquée à cause du ballon ?
-        pump_blocked_by_heater = "water_heater_priority" in reason or "water_heater_relocked" in reason
+        pump_blocked_by_heater = (
+            "water_heater_priority" in reason or "water_heater_relocked" in reason
+        )
 
         return {
             "configured": True,

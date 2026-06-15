@@ -1,62 +1,62 @@
 """Data coordinator for Smart Pool Filtration Manager."""
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, date
-from typing import Optional
+from datetime import date, datetime, timedelta
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_FILTRATION_END_HOUR,
+    CONF_FILTRATION_START_HOUR,
+    CONF_GRID_CONSUMPTION_SENSOR,
+    CONF_MAX_DAILY_DURATION,
+    CONF_MIN_DAILY_DURATION,
+    CONF_MIN_SOLAR_POWER,
+    CONF_PUMP_POWER_W,
+    CONF_PUMP_SWITCH,
+    CONF_ROUGE_SURPLUS_MARGIN_W,
+    CONF_SOLAR_POWER_SENSOR,
+    CONF_SOLAR_PRIORITY,
+    CONF_TEMPO_ALLOW_BLANC_HP,
+    CONF_TEMPO_ALLOW_ROUGE_HC,
+    CONF_TEMPO_ALLOW_ROUGE_HP,
+    CONF_TEMPO_COLOR_SENSOR,
+    CONF_TEMPO_HC_SENSOR,
+    CONF_WATER_HEATER_HYSTERESIS,
+    CONF_WATER_HEATER_MIN_TEMP,
+    CONF_WATER_HEATER_TEMP_SENSOR,
+    CONF_WATER_TEMP_SENSOR,
+    DEFAULT_FILTRATION_END_HOUR,
+    DEFAULT_FILTRATION_START_HOUR,
+    DEFAULT_MAX_DAILY_DURATION,
+    DEFAULT_MIN_DAILY_DURATION,
+    DEFAULT_MIN_SOLAR_POWER,
+    DEFAULT_PUMP_POWER_W,
+    DEFAULT_ROUGE_SURPLUS_MARGIN_W,
+    DEFAULT_SOLAR_PRIORITY,
+    DEFAULT_TEMPO_ALLOW_BLANC_HP,
+    DEFAULT_TEMPO_ALLOW_ROUGE_HC,
+    DEFAULT_TEMPO_ALLOW_ROUGE_HP,
+    DEFAULT_WATER_HEATER_HYSTERESIS,
+    DEFAULT_WATER_HEATER_MIN_TEMP,
     DOMAIN,
-    UPDATE_INTERVAL_SECONDS,
+    MODE_AUTO,
+    MODE_MANUAL,
+    MODE_OFF,
+    MODE_SOLAR,
     STORAGE_KEY,
     STORAGE_VERSION,
     TEMP_DURATION_TABLE,
-    CONF_PUMP_SWITCH,
-    CONF_WATER_TEMP_SENSOR,
-    CONF_SOLAR_POWER_SENSOR,
-    CONF_GRID_CONSUMPTION_SENSOR,
-    CONF_TEMPO_COLOR_SENSOR,
-    CONF_TEMPO_HC_SENSOR,
-    CONF_WATER_HEATER_TEMP_SENSOR,
-    CONF_MIN_SOLAR_POWER,
-    CONF_SOLAR_PRIORITY,
-    CONF_MIN_DAILY_DURATION,
-    CONF_MAX_DAILY_DURATION,
-    CONF_FILTRATION_START_HOUR,
-    CONF_FILTRATION_END_HOUR,
-    CONF_TEMPO_ALLOW_BLANC_HP,
-    CONF_TEMPO_ALLOW_ROUGE_HP,
-    CONF_TEMPO_ALLOW_ROUGE_HC,
-    CONF_PUMP_POWER_W,
-    CONF_ROUGE_SURPLUS_MARGIN_W,
-    CONF_WATER_HEATER_MIN_TEMP,
-    CONF_WATER_HEATER_HYSTERESIS,
-    DEFAULT_MIN_SOLAR_POWER,
-    DEFAULT_SOLAR_PRIORITY,
-    DEFAULT_MIN_DAILY_DURATION,
-    DEFAULT_MAX_DAILY_DURATION,
-    DEFAULT_FILTRATION_START_HOUR,
-    DEFAULT_FILTRATION_END_HOUR,
-    DEFAULT_TEMPO_ALLOW_BLANC_HP,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HP,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HC,
-    DEFAULT_PUMP_POWER_W,
-    DEFAULT_ROUGE_SURPLUS_MARGIN_W,
-    DEFAULT_WATER_HEATER_MIN_TEMP,
-    DEFAULT_WATER_HEATER_HYSTERESIS,
-    TEMPO_COLOR_BLEU,
     TEMPO_COLOR_BLANC,
+    TEMPO_COLOR_BLEU,
     TEMPO_COLOR_ROUGE,
     TEMPO_COLOR_UNKNOWN,
-    MODE_AUTO,
-    MODE_SOLAR,
-    MODE_MANUAL,
-    MODE_OFF,
+    UPDATE_INTERVAL_SECONDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,14 +64,12 @@ _LOGGER = logging.getLogger(__name__)
 
 def calculate_target_duration(temp: float) -> float:
     """
-    Calculate required filtration duration in hours based on water temperature.
+    Calculate required filtration duration in minutes based on water temperature.
     Uses the standard pool rule: T/2 hours, with min/max bounds.
     Interpolates between known points for precision.
     """
     if temp <= TEMP_DURATION_TABLE[0][0]:
         return TEMP_DURATION_TABLE[0][1]
-    if temp >= TEMP_DURATION_TABLE[-1][0]:
-        return TEMP_DURATION_TABLE[-1][1]
 
     for i in range(len(TEMP_DURATION_TABLE) - 1):
         t1, d1 = TEMP_DURATION_TABLE[i]
@@ -80,7 +78,7 @@ def calculate_target_duration(temp: float) -> float:
             ratio = (temp - t1) / (t2 - t1)
             return d1 + ratio * (d2 - d1)
 
-    return temp / 2.0
+    return TEMP_DURATION_TABLE[len(TEMP_DURATION_TABLE) - 1][1]
 
 
 class PoolFiltrationCoordinator(DataUpdateCoordinator):
@@ -94,14 +92,15 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         self._mode: str = MODE_AUTO
         self._manual_override: bool = False
         self._pump_running: bool = False
-        self._run_start: Optional[datetime] = None
+        self._run_start: datetime | None = None
         self._daily_runtime_minutes: float = 0.0
-        self._last_reset_date: Optional[date] = None
+        self._last_reset_date: date | None = None
         self._solar_contribution_minutes: float = 0.0
         self._hc_contribution_minutes: float = 0.0
         # Water heater hysteresis state:
         # False = ballon not yet at (min_temp + hysteresis) → pump locked
-        # True  = ballon has reached unlock threshold → pump allowed until it drops below min_temp
+        # True  = ballon has reached unlock threshold → pump allowed until
+        # it drops below min_temp
         self._water_heater_unlocked: bool = False
 
         super().__init__(
@@ -151,11 +150,11 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         return bool(self._get_option(CONF_SOLAR_PRIORITY, DEFAULT_SOLAR_PRIORITY))
 
     @property
-    def min_daily_duration_hours(self) -> float:
+    def min_daily_duration_mn(self) -> float:
         return float(self._get_option(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION))
 
     @property
-    def max_daily_duration_hours(self) -> float:
+    def max_daily_duration_mn(self) -> float:
         return float(self._get_option(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION))
 
     @property
@@ -195,13 +194,15 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
     @property
     def water_heater_hysteresis(self) -> float:
         """Hysteresis in °C above min_temp required to unlock the pump."""
-        return float(self._get_option(CONF_WATER_HEATER_HYSTERESIS, DEFAULT_WATER_HEATER_HYSTERESIS))
+        return float(
+            self._get_option(CONF_WATER_HEATER_HYSTERESIS, DEFAULT_WATER_HEATER_HYSTERESIS)
+        )
 
     # ------------------------------------------------------------------
     # Sensor reading helpers
     # ------------------------------------------------------------------
 
-    def _get_sensor_float(self, entity_id: str) -> Optional[float]:
+    def _get_sensor_float(self, entity_id: str) -> float | None:
         """Safely read a numeric sensor value."""
         state = self.hass.states.get(entity_id)
         if state is None or state.state in ("unknown", "unavailable", None):
@@ -211,26 +212,26 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         except (ValueError, TypeError):
             return None
 
-    def _get_sensor_str(self, entity_id: str) -> Optional[str]:
+    def _get_sensor_str(self, entity_id: str) -> str | None:
         """Safely read a string sensor value."""
         state = self.hass.states.get(entity_id)
         if state is None or state.state in ("unknown", "unavailable"):
             return None
         return state.state
 
-    def get_water_temperature(self) -> Optional[float]:
+    def get_water_temperature(self) -> float | None:
         entity_id = self.config_entry.data.get(CONF_WATER_TEMP_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
-    def get_solar_power(self) -> Optional[float]:
+    def get_solar_power(self) -> float | None:
         entity_id = self.config_entry.data.get(CONF_SOLAR_POWER_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
-    def get_grid_consumption(self) -> Optional[float]:
+    def get_grid_consumption(self) -> float | None:
         entity_id = self.config_entry.data.get(CONF_GRID_CONSUMPTION_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
-    def get_solar_surplus_for_pump(self) -> Optional[float]:
+    def get_solar_surplus_for_pump(self) -> float | None:
         """
         Calculate the solar surplus available to run the pump without drawing from the grid.
 
@@ -262,7 +263,7 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         # Simply: surplus = -grid_net when exporting, negative when importing
         return -grid_net  # positive = surplus available, negative = already importing
 
-    def get_tempo_color(self) -> Optional[str]:
+    def get_tempo_color(self) -> str | None:
         """
         Return current Tempo color: 'Bleu', 'Blanc', 'Rouge', or None if not configured.
         Compatible with hekmon/rtetempo (sensor.rte_tempo_couleur_actuelle).
@@ -270,7 +271,7 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         entity_id = self.config_entry.data.get(CONF_TEMPO_COLOR_SENSOR)
         return self._get_sensor_str(entity_id) if entity_id else None
 
-    def get_tempo_is_hc(self) -> Optional[bool]:
+    def get_tempo_is_hc(self) -> bool | None:
         """
         Return True if currently in Heures Creuses, False if HP, None if not configured.
         Compatible with hekmon/rtetempo (binary_sensor.rte_tempo_heures_creuses).
@@ -284,7 +285,7 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             return None
         return state.state == "on"
 
-    def get_water_heater_temperature(self) -> Optional[float]:
+    def get_water_heater_temperature(self) -> float | None:
         """Return current water heater (ballon ECS) temperature, or None if not configured."""
         entity_id = self.config_entry.data.get(CONF_WATER_HEATER_TEMP_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
@@ -337,32 +338,37 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
                 self._water_heater_unlocked = True
                 _LOGGER.info(
                     "Water heater reached %.1f°C (unlock threshold %.1f°C) — pump unlocked",
-                    temp, unlock_threshold,
+                    temp,
+                    unlock_threshold,
                 )
                 return True, f"water_heater_unlocked_{temp:.1f}c"
             else:
-                return False, f"water_heater_priority_{temp:.1f}c_need_{unlock_threshold:.1f}c"
+                return (
+                    False,
+                    f"water_heater_priority_{temp:.1f}c_need_{unlock_threshold:.1f}c",
+                )
         else:
             # Currently unlocked — check if temp dropped below lock threshold
             if temp < lock_threshold:
                 self._water_heater_unlocked = False
                 _LOGGER.info(
-                    "Water heater dropped to %.1f°C (below %.1f°C) — pump locked for heater priority",
-                    temp, lock_threshold,
+                    "Water heater dropped to %.1f°C (below %.1f°C) \
+                        — pump locked for heater priority",
+                    temp,
+                    lock_threshold,
                 )
                 return False, f"water_heater_relocked_{temp:.1f}c"
             else:
                 return True, f"water_heater_ok_{temp:.1f}c"
 
-    def get_target_duration_hours(self) -> float:
-        """Calculate today's target filtration duration in hours."""
+    def get_target_duration(self) -> float:
+        """Calculate today's target filtration duration in minutes."""
         temp = self.get_water_temperature()
         if temp is None:
-            return self.min_daily_duration_hours
+            return self.min_daily_duration_mn
 
         calculated = calculate_target_duration(temp)
-        return max(self.min_daily_duration_hours,
-                   min(self.max_daily_duration_hours, calculated))
+        return max(self.min_daily_duration_mn, min(self.max_daily_duration_mn, calculated))
 
     # ------------------------------------------------------------------
     # Tempo decision helper
@@ -418,7 +424,10 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             if surplus >= required:
                 return True, f"rouge_hp_surplus_ok_{surplus:.0f}W"
 
-            return False, f"rouge_hp_surplus_insufficient_{surplus:.0f}W_need_{required:.0f}W"
+            return (
+                False,
+                f"rouge_hp_surplus_insufficient_{surplus:.0f}W_need_{required:.0f}W",
+            )
 
         # ------------------------------------------------------------------
         # Jour BLANC
@@ -472,14 +481,17 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             return False, "mode_off"
 
         # 3. Max daily duration reached
-        target_hours = self.get_target_duration_hours()
+        target_hours = self.get_target_duration()
         target_minutes = target_hours * 60
         if self._daily_runtime_minutes >= target_minutes:
             return False, "quota_reached"
 
         # 4. Outside allowed time window
         current_hour = now.hour + now.minute / 60.0
-        if not (self.filtration_start_hour <= current_hour < self.filtration_end_hour):
+        if not (
+            (self.filtration_start_hour <= current_hour)
+            and (current_hour < self.filtration_end_hour)
+        ):
             return False, "outside_hours"
 
         # 5. Water heater (ballon ECS) priority — checked before solar/Tempo
@@ -502,7 +514,6 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
 
         # 7. Auto mode
         if self._mode == MODE_AUTO:
-
             # 7a. Solaire dispo -> toujours ON (ballon déjà prioritaire vérifié ci-dessus)
             if solar_available:
                 return True, "auto_solar"
@@ -570,7 +581,7 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         grid_consumption = self.get_grid_consumption()
         tempo_color = self.get_tempo_color()
         tempo_is_hc = self.get_tempo_is_hc()
-        target_hours = self.get_target_duration_hours()
+        target_hours = self.get_target_duration()
         solar_surplus = self.get_solar_surplus_for_pump()
         water_heater_temp = self.get_water_heater_temperature()
 
@@ -595,7 +606,8 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             self._pump_running = True
             self._run_start = now
             _LOGGER.info(
-                "Pump ON [%s] -- pool=%.1fC ballon=%.1fC solar=%.0fW surplus=%.0fW tempo=%s %s runtime=%.0f/%.0f min",
+                "Pump ON [%s] -- pool=%.1fC ballon=%.1fC solar=%.0fW surplus=%.0fW \
+                    tempo=%s %s runtime=%.0f/%.0f min",
                 reason,
                 water_temp or 0,
                 water_heater_temp or 0,
@@ -679,13 +691,15 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
 
     async def _save_state(self) -> None:
         """Persist runtime data across HA restarts."""
-        await self._store.async_save({
-            "daily_runtime_minutes": self._daily_runtime_minutes,
-            "solar_contribution_minutes": self._solar_contribution_minutes,
-            "hc_contribution_minutes": self._hc_contribution_minutes,
-            "last_reset_date": str(self._last_reset_date),
-            "mode": self._mode,
-        })
+        await self._store.async_save(
+            {
+                "daily_runtime_minutes": self._daily_runtime_minutes,
+                "solar_contribution_minutes": self._solar_contribution_minutes,
+                "hc_contribution_minutes": self._hc_contribution_minutes,
+                "last_reset_date": str(self._last_reset_date),
+                "mode": self._mode,
+            }
+        )
 
     async def async_load_state(self) -> None:
         """Load persisted state on startup."""
