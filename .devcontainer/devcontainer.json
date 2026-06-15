@@ -6,7 +6,7 @@
   "image": "mcr.microsoft.com/devcontainers/python:3.14",
 
   // Installation des dépendances après création du container
-  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements_dev.txt && pip install homeassistant",
+  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements_dev.txt",
 
   "forwardPorts": [8123],
   "portsAttributes": {
@@ -49,7 +49,7 @@
         "terminal.integrated.defaultProfile.linux": "bash",
 
         "python.formatting.provider": "black",
-        "editor.formatOnPaste": false,
+        "editor.formatOnPaste": true,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
         "files.trimTrailingWhitespace": true,
@@ -58,7 +58,7 @@
         "python.analysis.autoSearchPaths": true,
         "python.linting.pylintEnabled": true,
         "python.linting.enabled": true,
-        
+
         "python.analysis.typeCheckingMode": "basic",
         "python.analysis.autoImportCompletions": true,
         "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -70,5 +70,14 @@
     }
   },
 
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+        "packages": [
+            "ffmpeg",
+            "libturbojpeg0",
+            "libpcap-dev"
+        ]
+    }
+
 }

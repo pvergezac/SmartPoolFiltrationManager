@@ -228,4 +228,6 @@ Ce projet est distribué sous licence MIT. Voir le fichier [LICENSE](LICENSE) po
 
 <div align="center">
 Fait avec ❤️ pour la communauté Home Assistant francophone
+
+Si vous aimez ce projet, ajouter une ⭐ étoile sur [Github](https://github.com/pvergezac/SmartPoolFiltrationManager)
 </div>

@@ -2,7 +2,8 @@
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
-from custom_components.pool_filtration.const import DOMAIN
+
+from custom_components.smartpoolfiltmgr.const import DOMAIN
 
 
 @pytest.fixture(autouse=True)
