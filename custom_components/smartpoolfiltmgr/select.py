@@ -35,9 +35,7 @@ class PoolModeSelect(CoordinatorEntity, SelectEntity):
     _attr_icon = "mdi:cog-outline"
     _attr_options = list(MODE_OPTIONS.values())
 
-    def __init__(
-        self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._entry = entry
 

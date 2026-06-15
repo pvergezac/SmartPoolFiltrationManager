@@ -78,14 +78,10 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                 ),
                 vol.Required(CONF_SOLAR_POWER_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=[SENSOR_DOMAIN], device_class="power"
-                    )
+                    selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN], device_class="power")
                 ),
                 vol.Optional(CONF_GRID_CONSUMPTION_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(
-                        domain=[SENSOR_DOMAIN], device_class="power"
-                    )
+                    selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN], device_class="power")
                 ),
                 # Tempo RTE — optionnel mais recommandé
                 vol.Optional(CONF_TEMPO_COLOR_SENSOR): selector.EntitySelector(
@@ -158,9 +154,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                 ): selector.BooleanSelector(),
                 vol.Optional(
                     CONF_MIN_DAILY_DURATION,
-                    default=options.get(
-                        CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION
-                    ),
+                    default=options.get(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=0, max=6, step=0.5, unit_of_measurement="h", mode="slider"
@@ -168,9 +162,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(
                     CONF_MAX_DAILY_DURATION,
-                    default=options.get(
-                        CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION
-                    ),
+                    default=options.get(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=4, max=24, step=0.5, unit_of_measurement="h", mode="slider"
@@ -178,9 +170,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(
                     CONF_FILTRATION_START_HOUR,
-                    default=options.get(
-                        CONF_FILTRATION_START_HOUR, DEFAULT_FILTRATION_START_HOUR
-                    ),
+                    default=options.get(CONF_FILTRATION_START_HOUR, DEFAULT_FILTRATION_START_HOUR),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=0, max=23, step=1, unit_of_measurement="h", mode="slider"
@@ -188,9 +178,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                 ),
                 vol.Optional(
                     CONF_FILTRATION_END_HOUR,
-                    default=options.get(
-                        CONF_FILTRATION_END_HOUR, DEFAULT_FILTRATION_END_HOUR
-                    ),
+                    default=options.get(CONF_FILTRATION_END_HOUR, DEFAULT_FILTRATION_END_HOUR),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=1, max=24, step=1, unit_of_measurement="h", mode="slider"
@@ -199,21 +187,15 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                 # --- Tempo ---
                 vol.Optional(
                     CONF_TEMPO_ALLOW_BLANC_HP,
-                    default=options.get(
-                        CONF_TEMPO_ALLOW_BLANC_HP, DEFAULT_TEMPO_ALLOW_BLANC_HP
-                    ),
+                    default=options.get(CONF_TEMPO_ALLOW_BLANC_HP, DEFAULT_TEMPO_ALLOW_BLANC_HP),
                 ): selector.BooleanSelector(),
                 vol.Optional(
                     CONF_TEMPO_ALLOW_ROUGE_HC,
-                    default=options.get(
-                        CONF_TEMPO_ALLOW_ROUGE_HC, DEFAULT_TEMPO_ALLOW_ROUGE_HC
-                    ),
+                    default=options.get(CONF_TEMPO_ALLOW_ROUGE_HC, DEFAULT_TEMPO_ALLOW_ROUGE_HC),
                 ): selector.BooleanSelector(),
                 vol.Optional(
                     CONF_TEMPO_ALLOW_ROUGE_HP,
-                    default=options.get(
-                        CONF_TEMPO_ALLOW_ROUGE_HP, DEFAULT_TEMPO_ALLOW_ROUGE_HP
-                    ),
+                    default=options.get(CONF_TEMPO_ALLOW_ROUGE_HP, DEFAULT_TEMPO_ALLOW_ROUGE_HP),
                 ): selector.BooleanSelector(),
                 # --- Puissance pompe (calcul surplus jour Rouge) ---
                 vol.Optional(
@@ -241,9 +223,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                 # --- Priorité ballon ECS (MSunPV) ---
                 vol.Optional(
                     CONF_WATER_HEATER_MIN_TEMP,
-                    default=options.get(
-                        CONF_WATER_HEATER_MIN_TEMP, DEFAULT_WATER_HEATER_MIN_TEMP
-                    ),
+                    default=options.get(CONF_WATER_HEATER_MIN_TEMP, DEFAULT_WATER_HEATER_MIN_TEMP),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
                         min=30, max=75, step=1, unit_of_measurement="°C", mode="slider"

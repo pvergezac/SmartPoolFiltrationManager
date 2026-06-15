@@ -27,9 +27,7 @@ class PoolManualOverrideSwitch(CoordinatorEntity, SwitchEntity):
     _attr_name = "Pool Filtration — Forçage manuel"
     _attr_icon = "mdi:water-pump"
 
-    def __init__(
-        self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry
-    ) -> None:
+    def __init__(self, coordinator: PoolFiltrationCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)
         self._entry = entry
 
