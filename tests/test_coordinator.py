@@ -1,20 +1,14 @@
 """Tests pour le coordinateur Pool Filtration."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch
-from datetime import date
 
-from custom_components.pool_filtration.coordinator import (
-    calculate_target_duration,
+from custom_components.smartpoolfiltmgr.const import MODE_AUTO, MODE_OFF, MODE_SOLAR
+from custom_components.smartpoolfiltmgr.coordinator import (
     PoolFiltrationCoordinator,
+    calculate_target_duration,
 )
-from custom_components.pool_filtration.const import (
-    MODE_AUTO,
-    MODE_SOLAR,
-    MODE_OFF,
-    MODE_MANUAL,
-)
-
 
 # ------------------------------------------------------------------
 # Tests calculate_target_duration
@@ -22,6 +16,8 @@ from custom_components.pool_filtration.const import (
 
 
 class TestCalculateTargetDuration:
+    """Test de CalculateTargetDuration."""
+
     def test_cold_water_minimum(self):
         """Eau froide → durée minimale."""
         assert calculate_target_duration(5) == 1.0
@@ -88,6 +84,8 @@ def coordinator(mock_hass, mock_entry):
 
 
 class TestCoordinatorMode:
+    """Test de CoordinatorMode."""
+
     def test_default_mode_is_auto(self, coordinator):
         assert coordinator.mode == MODE_AUTO
 
@@ -108,6 +106,8 @@ class TestCoordinatorMode:
 
 
 class TestShouldPumpRun:
+    """Test de ShouldPumpRun."""
+
     def _make_state(self, value):
         s = MagicMock()
         s.state = str(value)
@@ -168,6 +168,8 @@ class TestShouldPumpRun:
 
 
 class TestDailyReset:
+    """Test DailyReset."""
+
     def test_resets_on_new_day(self, coordinator):
         from datetime import date
 
@@ -176,16 +178,14 @@ class TestDailyReset:
         coordinator._last_reset_date = date(2024, 1, 1)
 
         with patch("custom_components.pool_filtration.coordinator.dt_util") as mock_dt:
-            mock_dt.now.return_value = MagicMock(
-                date=MagicMock(return_value=date(2024, 1, 2))
-            )
+            mock_dt.now.return_value = MagicMock(date=MagicMock(return_value=date(2024, 1, 2)))
             # Appel direct de la méthode interne
             coordinator._last_reset_date = date(2024, 1, 1)
 
             # Simuler un nouveau jour
             from homeassistant.util import dt as real_dt
 
-            today = real_dt.now().date()
+            # today = real_dt.now().date()
             coordinator._last_reset_date = date(2000, 1, 1)  # vieille date
             coordinator._check_daily_reset()
 
