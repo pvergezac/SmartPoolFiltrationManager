@@ -183,7 +183,6 @@ class TestDailyReset:
             coordinator._last_reset_date = date(2024, 1, 1)
 
             # Simuler un nouveau jour
-            from homeassistant.util import dt as real_dt
 
             # today = real_dt.now().date()
             coordinator._last_reset_date = date(2000, 1, 1)  # vieille date
