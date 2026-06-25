@@ -4,7 +4,8 @@
   "editor.rulers": [88],
   "ruff.enable": true,
   "ruff.lint.select": ["E","F","W","I","UP"],
-    "mypy-type-checker.args": [
+  "ruff.lineLength": 100,
+  "mypy-type-checker.args": [
     "--ignore-missing-imports",
     "--allow-untyped-defs"
   ],

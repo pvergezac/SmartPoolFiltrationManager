@@ -116,22 +116,29 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
 
     @property
     def mode(self) -> str:
+        """Return current operating mode."""
         return self._mode
 
     @property
     def pump_running(self) -> bool:
+        """Return True if the pump is currently running."""
         return self._pump_running
 
     @property
     def daily_runtime_minutes(self) -> float:
+        """Return accumulated pump runtime for today in minutes."""
         return self._daily_runtime_minutes
 
     @property
     def solar_contribution_minutes(self) -> float:
+        """Return accumulated pump runtime on solar power for today in minutes."""
         return self._solar_contribution_minutes
 
     @property
     def hc_contribution_minutes(self) -> float:
+        """
+        Return accumulated pump runtime on Tempo Heures Creuses for today in minutes.
+        """
         return self._hc_contribution_minutes
 
     # ------------------------------------------------------------------
@@ -143,42 +150,52 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
 
     @property
     def min_solar_power(self) -> float:
+        """Return minimum solar power required for pump operation."""
         return float(self._get_option(CONF_MIN_SOLAR_POWER, DEFAULT_MIN_SOLAR_POWER))
 
     @property
     def solar_priority(self) -> bool:
+        """Return True if solar priority mode is enabled."""
         return bool(self._get_option(CONF_SOLAR_PRIORITY, DEFAULT_SOLAR_PRIORITY))
 
     @property
     def min_daily_duration_mn(self) -> float:
+        """Return minimum daily pump duration in minutes."""
         return float(self._get_option(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION))
 
     @property
     def max_daily_duration_mn(self) -> float:
+        """Return maximum daily pump duration in minutes."""
         return float(self._get_option(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION))
 
     @property
     def filtration_start_hour(self) -> int:
+        """Return the hour when filtration should start."""
         return int(self._get_option(CONF_FILTRATION_START_HOUR, DEFAULT_FILTRATION_START_HOUR))
 
     @property
     def filtration_end_hour(self) -> int:
+        """Return the hour when filtration should end."""
         return int(self._get_option(CONF_FILTRATION_END_HOUR, DEFAULT_FILTRATION_END_HOUR))
 
     @property
     def tempo_allow_blanc_hp(self) -> bool:
+        """Return True if Tempo Blanc HP is allowed."""
         return bool(self._get_option(CONF_TEMPO_ALLOW_BLANC_HP, DEFAULT_TEMPO_ALLOW_BLANC_HP))
 
     @property
     def tempo_allow_rouge_hc(self) -> bool:
+        """Return True if Tempo Rouge HC is allowed."""
         return bool(self._get_option(CONF_TEMPO_ALLOW_ROUGE_HC, DEFAULT_TEMPO_ALLOW_ROUGE_HC))
 
     @property
     def tempo_allow_rouge_hp(self) -> bool:
+        """Return True if Tempo Rouge HP is allowed."""
         return bool(self._get_option(CONF_TEMPO_ALLOW_ROUGE_HP, DEFAULT_TEMPO_ALLOW_ROUGE_HP))
 
     @property
     def pump_power_w(self) -> float:
+        """Return the configured pump power in Watts."""
         return float(self._get_option(CONF_PUMP_POWER_W, DEFAULT_PUMP_POWER_W))
 
     @property
@@ -220,20 +237,24 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         return state.state
 
     def get_water_temperature(self) -> float | None:
+        """Return current pool water temperature, or None if not configured."""
         entity_id = self.config_entry.data.get(CONF_WATER_TEMP_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
     def get_solar_power(self) -> float | None:
+        """Return current solar power production in Watts, or None if not configured."""
         entity_id = self.config_entry.data.get(CONF_SOLAR_POWER_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
     def get_grid_consumption(self) -> float | None:
+        """Return current grid consumption in Watts, or None if not configured."""
         entity_id = self.config_entry.data.get(CONF_GRID_CONSUMPTION_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
     def get_solar_surplus_for_pump(self) -> float | None:
         """
-        Calculate the solar surplus available to run the pump without drawing from the grid.
+        Calculate the solar surplus available to run the pump without drawing from
+        the grid.
 
         Uses the net grid meter (positive = import, negative = export) combined with
         solar production to derive current household consumption, then computes how
@@ -246,9 +267,9 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
                          = grid_net  (when grid_net < 0: surplus = |export|)
 
         In practice:
-            - grid_net = -800W (exporting 800W) → surplus = 800W available for pump
-            - grid_net = +200W (importing 200W)  → surplus = -200W (deficit, can't add pump)
-            - grid_net =  0W  (balanced)          → surplus = 0W (just enough for house)
+        - grid_net = -800W (exporting 800W) → surplus = 800W available for pump
+        - grid_net = +200W (importing 200W)  → surplus = -200W (deficit, can't add pump)
+        - grid_net =  0W  (balanced)          → surplus = 0W (just enough for house)
 
         Returns None if either sensor is unavailable.
         """
@@ -286,7 +307,10 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         return state.state == "on"
 
     def get_water_heater_temperature(self) -> float | None:
-        """Return current water heater (ballon ECS) temperature, or None if not configured."""
+        """
+        Return current water heater (ballon ECS) temperature, or None if not configured.
+        Used to determine if pump can run without starving the water heater of power.
+        """
         entity_id = self.config_entry.data.get(CONF_WATER_HEATER_TEMP_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
@@ -352,8 +376,8 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             if temp < lock_threshold:
                 self._water_heater_unlocked = False
                 _LOGGER.info(
-                    "Water heater dropped to %.1f°C (below %.1f°C) \
-                        — pump locked for heater priority",
+                    "Water heater dropped to %.1f°C (below %.1f°C) "
+                    "— pump locked for heater priority",
                     temp,
                     lock_threshold,
                 )
