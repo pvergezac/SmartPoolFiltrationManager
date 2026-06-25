@@ -2,12 +2,9 @@
   "python.defaultInterpreterPath": "/usr/local/bin/python3",
   "editor.formatOnSave": true,
   "editor.rulers": [88],
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter"
-  },
   "ruff.enable": true,
-  "ruff.lint.args": ["--select=E,F,W,I,UP"],
-  "mypy-type-checker.args": [
+  "ruff.lint.select": ["E","F","W","I","UP"],
+    "mypy-type-checker.args": [
     "--ignore-missing-imports",
     "--allow-untyped-defs"
   ],

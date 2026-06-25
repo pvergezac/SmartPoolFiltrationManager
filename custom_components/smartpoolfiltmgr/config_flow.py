@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Self
+
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 
@@ -53,6 +55,10 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Smart Pool Filtration Manager."""
 
     VERSION = 1
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        raise NotImplementedError
 
     async def async_step_user(self, user_input=None):
         """Handle the initial configuration step."""
@@ -145,7 +151,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                         max=5000,
                         step=50,
                         unit_of_measurement="W",
-                        mode="slider",
+                        mode=selector.NumberSelectorMode.SLIDER,  #  "slider",
                     )
                 ),
                 vol.Optional(
@@ -157,7 +163,11 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                     default=options.get(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=0, max=6, step=0.5, unit_of_measurement="h", mode="slider"
+                        min=0,
+                        max=6,
+                        step=0.5,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
                     )
                 ),
                 vol.Optional(
@@ -165,7 +175,11 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                     default=options.get(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=4, max=24, step=0.5, unit_of_measurement="h", mode="slider"
+                        min=4,
+                        max=24,
+                        step=0.5,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
                     )
                 ),
                 vol.Optional(
@@ -173,7 +187,11 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                     default=options.get(CONF_FILTRATION_START_HOUR, DEFAULT_FILTRATION_START_HOUR),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=0, max=23, step=1, unit_of_measurement="h", mode="slider"
+                        min=0,
+                        max=23,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
                     )
                 ),
                 vol.Optional(
@@ -181,7 +199,11 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                     default=options.get(CONF_FILTRATION_END_HOUR, DEFAULT_FILTRATION_END_HOUR),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=1, max=24, step=1, unit_of_measurement="h", mode="slider"
+                        min=1,
+                        max=24,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
                     )
                 ),
                 # --- Tempo ---
@@ -207,7 +229,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                         max=3000,
                         step=50,
                         unit_of_measurement="W",
-                        mode="slider",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider",
                     )
                 ),
                 vol.Optional(
@@ -217,7 +239,11 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                     ),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=0, max=500, step=10, unit_of_measurement="W", mode="slider"
+                        min=0,
+                        max=500,
+                        step=10,
+                        unit_of_measurement="W",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
                     )
                 ),
                 # --- Priorité ballon ECS (MSunPV) ---
@@ -226,7 +252,11 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                     default=options.get(CONF_WATER_HEATER_MIN_TEMP, DEFAULT_WATER_HEATER_MIN_TEMP),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=30, max=75, step=1, unit_of_measurement="°C", mode="slider"
+                        min=30,
+                        max=75,
+                        step=1,
+                        unit_of_measurement="°C",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
                     )
                 ),
                 vol.Optional(
@@ -240,7 +270,7 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                         max=10,
                         step=0.5,
                         unit_of_measurement="°C",
-                        mode="slider",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider",
                     )
                 ),
             }

@@ -8,8 +8,9 @@ target-version = ["py312"]
 
 [tool.ruff]
 line-length = 100
-select = ["E", "F", "W", "I", "UP"]
-ignore = ["E501"]
+lint.select = ["E", "F", "W", "I", "UP"]
+lint.ignore = ["E501"]
+exclude = ["tests"]
 
 [tool.mypy]
 python_version = "3.12"
