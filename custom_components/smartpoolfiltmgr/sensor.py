@@ -60,6 +60,7 @@ class PoolDailyRuntimeSensor(PoolBaseSensor):
     _attr_native_unit_of_measurement = "min"
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_suggested_display_precision = 0
+    _attr_device_class = SensorDeviceClass.DURATION
 
     @property
     def unique_id(self):
@@ -98,6 +99,7 @@ class PoolTargetDurationSensor(PoolBaseSensor):
     _attr_icon = "mdi:target"
     _attr_native_unit_of_measurement = "min"
     _attr_suggested_display_precision = 0
+    _attr_device_class = SensorDeviceClass.DURATION
 
     @property
     def unique_id(self):
@@ -206,10 +208,6 @@ class PoolTempoSensor(PoolBaseSensor):
         color = data.get("tempo_color", "Inconnu")
         is_hc = data.get("tempo_is_hc")
         reason = data.get("decision_reason", "")
-        surplus = data.get("solar_surplus_w")
-        pump_power = data.get("pump_power_w", 750)
-        margin = data.get("rouge_surplus_margin_w", 50)
-        required = pump_power + margin
 
         tempo_impact = _describe_tempo_impact(color, reason)
 
@@ -222,19 +220,6 @@ class PoolTempoSensor(PoolBaseSensor):
             "raison_decision": reason,
             "hc_contribution_minutes_today": round(data.get("hc_contribution_minutes", 0), 1),
         }
-
-        # Afficher les détails du surplus uniquement sur les jours rouges HP
-        if color == "Rouge" and not is_hc:
-            attrs.update(
-                {
-                    "surplus_solaire_w": (round(surplus, 0) if surplus is not None else "N/A"),
-                    "puissance_pompe_w": pump_power,
-                    "marge_securite_w": margin,
-                    "surplus_requis_w": required,
-                    "surplus_suffisant": (surplus is not None and surplus >= required),
-                    "manque_w": round(max(0, required - (surplus or 0)), 0),
-                }
-            )
 
         return attrs
 

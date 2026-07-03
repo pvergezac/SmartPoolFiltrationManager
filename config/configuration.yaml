@@ -7,29 +7,34 @@ default_config:
 logger:
   default: info
   logs:
-    custom_components.pool_filtration: debug
+    custom_components.smartpoolfiltmgr: info
 
 # Entités fictives pour tester sans vrai matériel
 template:
   - sensor:
       - name: "Temperature Piscine (simulée)"
+        state: "{{ states('input_number.pool_temperature_sim2') }}"
         unit_of_measurement: "°C"
-        state: "24.5"
+        device_class: temperature
+
+      - name: "Temperature Ballon ECS (simulée)"
+        state: "{{ states('input_number.pool_ballon_sim2') }}"
+        unit_of_measurement: "°C"
         device_class: temperature
 
       - name: "Production Solaire (simulée)"
+        state: "{{ states('input_number.solar_production_sim2') }}"
         unit_of_measurement: "W"
         device_class: power
-        state: "1800"
 
       - name: "Consommation Réseau (simulée)"
+        state: "{{ states('input_number.grid_consumption_sim2') }}"
         unit_of_measurement: "W"
         device_class: power
-        state: "320"
 
   - switch:
       - name: "Pompe Piscine (simulée)"
-        value_template: "{{ states('input_boolean.pompe_piscine_sim') }}"
+        state: "{{ states('input_boolean.pompe_piscine_sim') }}"
         turn_on:
           service: input_boolean.turn_on
           target:
@@ -43,3 +48,30 @@ input_boolean:
   pompe_piscine_sim:
     name: "État pompe piscine (sim)"
     initial: false
+
+
+input_number:
+  pool_temperature_sim2:
+    name: "Température de la piscine (simulée)"
+    initial: 28
+    min: 10
+    max: 35
+    step: 1
+  pool_ballon_sim2:
+    name: "Température du ballon ECS (simulée)"
+    initial: 50
+    min: 30
+    max: 70
+    step: 1
+  solar_production_sim2:
+    name: "Puissance production solaire simulée"
+    initial: 2500
+    min: 0
+    max: 3000
+    step: 100
+  grid_consumption_sim2:
+    name: "Consommation réseau simulée"
+    initial: 500
+    min: -2000
+    max: 2000
+    step: 100

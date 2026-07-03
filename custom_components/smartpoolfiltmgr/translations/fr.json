@@ -7,8 +7,8 @@
         "data": {
           "pump_switch": "Switch de la pompe de filtration",
           "water_temp_sensor": "Capteur de température de l'eau",
-          "solar_power_sensor": "Capteur de production solaire (W)",
-          "grid_consumption_sensor": "Capteur de consommation réseau (optionnel)",
+          "solar_power_sensor": "Capteur de production solaire",
+          "grid_power_sensor": "Capteur de puissance réseau",
           "tempo_color_sensor": "Capteur couleur Tempo (ex: sensor.rte_tempo_couleur_actuelle)",
           "tempo_hc_sensor": "Capteur Heures Creuses Tempo (ex: binary_sensor.rte_tempo_heures_creuses)",
           "water_heater_temp_sensor": "Capteur température ballon ECS — MSunPV (optionnel, priorité sur la pompe)"
@@ -27,19 +27,28 @@
       "init": {
         "title": "Options avancées",
         "data": {
-          "min_solar_power": "Production solaire minimale pour activer la pompe (W)",
-          "solar_priority": "Priorité à l'énergie solaire",
-          "min_daily_duration": "Durée minimale de filtration par jour (h)",
-          "max_daily_duration": "Durée maximale de filtration par jour (h)",
-          "filtration_start_hour": "Heure de début de filtration",
-          "filtration_end_hour": "Heure de fin de filtration",
-          "tempo_allow_blanc_hp": "Jour Blanc HP : autoriser la pompe sur réseau (sans solaire)",
-          "tempo_allow_rouge_hc": "Jour Rouge HC : autoriser la pompe (tarif HC seulement)",
-          "tempo_allow_rouge_hp": "Jour Rouge HP : autoriser la pompe sur réseau (déconseillé)",
-          "pump_power_w": "Puissance de la pompe (W) — utilisée pour le calcul du surplus jour Rouge",
-          "rouge_surplus_margin_w": "Marge de sécurité surplus jour Rouge (W) — évite les micro-soutirages",
-          "water_heater_min_temp": "Température minimale du ballon ECS avant d'autoriser la pompe (°C)",
-          "water_heater_hysteresis": "Hystérésis ballon ECS (°C) — évite les oscillations de la pompe"
+          "reset_daily_hour": "Réinitialisation de la durée filtration journalière à",
+          "min_daily_duration": "Filtration journalière minimale",
+          "max_daily_duration": "Filtration journalière maximale",
+
+          "solar_filtration_start_hour": "Plage de filtration solaire - début",
+          "solar_filtration_end_hour": "Plage de filtration solaire - fin",
+          "min_solar_power": "Production solaire minimum pour autoriser la pompe",
+          "water_heater_min_temp": "Température ballon ECS si température inférieure à",
+          "water_heater_hysteresis": "Hystérésis T ballon ECS",
+
+          "pump_start_power_threshold": "Activer la pompe si consommation réseau < (en plage solaire)",
+          "accepted_conso": "Arreter la pompe si consommation réseau > (en plage solaire)",
+          "accepted_conso_bleu": "Arreter la pompe si consommation réseau > (en plage solaire jour Bleu)",
+          "accepted_conso_blanc": "Arreter la pompe si consommation réseau > (en plage solaire jour Blanc)",
+          "accepted_conso_rouge": "Arreter la pompe si consommation réseau > (en plage solaire jour Rouges)",
+
+          "grid_filtration_start_hour": "Début de la plage de complement réseau de nuit",
+          "grid_filtration_end_hour": "Fin de la plage de complement réseau de nuit",
+          "grid_allow": "Complement réseau de nuit",
+          "grid_allow_bleu": "Complement réseau de nuit (jour Bleu)",
+          "grid_allow_blanc_hc": "Complement réseau de nuit (jour Blanc HC)",
+          "grid_allow_rouge_hc": "Complement réseau de nuit (jour Rouge HC)"
         }
       }
     }

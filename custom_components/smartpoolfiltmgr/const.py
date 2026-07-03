@@ -7,36 +7,38 @@ NAME = "Smart Pool Filtration Manager"
 CONF_PUMP_SWITCH = "pump_switch"
 CONF_WATER_TEMP_SENSOR = "water_temp_sensor"
 CONF_SOLAR_POWER_SENSOR = "solar_power_sensor"
-CONF_GRID_CONSUMPTION_SENSOR = "grid_consumption_sensor"
+CONF_GRID_POWER_SENSOR = "grid_power_sensor"
 CONF_MIN_SOLAR_POWER = "min_solar_power"
-CONF_SOLAR_PRIORITY = "solar_priority"
 CONF_MIN_DAILY_DURATION = "min_daily_duration"
 CONF_MAX_DAILY_DURATION = "max_daily_duration"
-CONF_FILTRATION_START_HOUR = "filtration_start_hour"
-CONF_FILTRATION_END_HOUR = "filtration_end_hour"
-CONF_TEMP_BOOST_THRESHOLD = "temp_boost_threshold"
+CONF_RESET_DAILY_HOUR = "reset_daily_hour"
+CONF_SOLAR_FILTRATION_START_HOUR = "solar_filtration_start_hour"
+CONF_SOLAR_FILTRATION_END_HOUR = "solar_filtration_end_hour"
+CONF_GRID_FILTRATION_START_HOUR = "grid_filtration_start_hour"
+CONF_GRID_FILTRATION_END_HOUR = "grid_filtration_end_hour"
 
 # Default values
 DEFAULT_MIN_SOLAR_POWER = 500  # Watts minimum pour considérer la production solaire
-DEFAULT_SOLAR_PRIORITY = True  # Priorité solaire activée par défaut
-DEFAULT_MIN_DAILY_DURATION = 120  # Durée minimum de filtration par jour (mn)
-DEFAULT_MAX_DAILY_DURATION = 1440  # Durée maximum de filtration par jour (mn)
-DEFAULT_FILTRATION_START_HOUR = 8  # Heure de début de plage de filtration
-DEFAULT_FILTRATION_END_HOUR = 20  # Heure de fin de plage de filtration
-DEFAULT_TEMP_BOOST_THRESHOLD = 28.0  # °C : au-dessus, on augmente la filtration
+DEFAULT_MIN_DAILY_DURATION = 2  # Durée minimum de filtration par jour (mn)
+DEFAULT_MAX_DAILY_DURATION = 24  # Durée maximum de filtration par jour (mn)
+DEFAULT_RESET_DAILY_HOUR = 6  # Heure de réinitialisation durée de filtration journalière
+DEFAULT_SOLAR_FILTRATION_START_HOUR = 8  # Heure de début de plage de filtration
+DEFAULT_SOLAR_FILTRATION_END_HOUR = 20  # Heure de fin de plage de filtration
+DEFAULT_GRID_FILTRATION_START_HOUR = 22  # Heure de début de plage de filtration complémentaire
+DEFAULT_GRID_FILTRATION_END_HOUR = 6  # Heure de fin de plage de filtration complémentaire
 
 # Filtration duration calculation (règle T°/2 en heures)
 TEMP_DURATION_TABLE = [
-    (10, 60.0),
-    (15, 120.0),
-    (18, 180.0),
-    (20, 240.0),
-    (22, 300.0),
-    (24, 360.0),
-    (26, 420.0),
-    (28, 530.0),
-    (30, 1440.0),
-    (35, 1440.0),
+    (10, 60.0),  # 10°C → 1h
+    (15, 120.0),  # 15°C → 2h
+    (18, 180.0),  # 18°C → 3h
+    (20, 240.0),  # 20°C → 4h
+    (22, 300.0),  # 22°C → 5h
+    (24, 360.0),  # 24°C → 6h
+    (26, 420.0),  # 26°C → 7h
+    (28, 530.0),  # 28°C → 8h50
+    (30, 1440.0),  # 30°C → 24h
+    (35, 1440.0),  # 35°C → 24h
 ]
 
 # Sensor & entity names
@@ -61,7 +63,16 @@ CONF_WATER_HEATER_TEMP_SENSOR = "water_heater_temp_sensor"
 CONF_WATER_HEATER_MIN_TEMP = "water_heater_min_temp"
 CONF_WATER_HEATER_HYSTERESIS = "water_heater_hysteresis"
 
-DEFAULT_WATER_HEATER_MIN_TEMP = 50.0  # °C : seuil min avant d'autoriser la pompe
+CONF_ACCEPTED_CONSO_BLEU = "accepted_conso_bleu"
+CONF_ACCEPTED_CONSO_BLANC = "accepted_conso_blanc"
+CONF_ACCEPTED_CONSO_ROUGE = "accepted_conso_rouge"
+
+DEFAULT_ACCEPTED_CONSO_BLEU = 500.0  # W : consommation réseau
+DEFAULT_ACCEPTED_CONSO_BLANC = 100.0  # W : consommation réseau
+DEFAULT_ACCEPTED_CONSO_ROUGE = 50.0  # W : consommation réseau
+
+
+DEFAULT_WATER_HEATER_MIN_TEMP = 40.0  # °C : seuil min avant d'autoriser la pompe
 DEFAULT_WATER_HEATER_HYSTERESIS = 2.0  # °C : marge anti-oscillation
 # Exemple : seuil=50°C, hyst=2°C
 #   ballon < 50°C        → pompe bloquée (ballon prioritaire)
@@ -74,22 +85,24 @@ DEFAULT_WATER_HEATER_HYSTERESIS = 2.0  # °C : marge anti-oscillation
 
 # Pump power configuration
 CONF_PUMP_POWER_W = "pump_power_w"
-CONF_ROUGE_SURPLUS_MARGIN_W = "rouge_surplus_margin_w"
-
-DEFAULT_PUMP_POWER_W = 750  # Puissance approximative de la pompe en Watts
-DEFAULT_ROUGE_SURPLUS_MARGIN_W = 50  # Marge de sécurité en Watts pour éviter les micro-soutirages
+DEFAULT_PUMP_POWER_W = 750  # Puissance approximative de la pompe
+CONF_PUMP_START_POWER_THRESHOLD = "pump_start_power_threshold"
+DEFAULT_PUMP_START_POWER_THRESHOLD = (
+    50.0  # Consomation max pour autoriser le demarrage de la pompe (plage solaire)
+)
 
 # Tempo configuration keys
 CONF_TEMPO_COLOR_SENSOR = "tempo_color_sensor"
 CONF_TEMPO_HC_SENSOR = "tempo_hc_sensor"
-CONF_TEMPO_ALLOW_BLANC_HP = "tempo_allow_blanc_hp"
-CONF_TEMPO_ALLOW_ROUGE_HP = "tempo_allow_rouge_hp"
-CONF_TEMPO_ALLOW_ROUGE_HC = "tempo_allow_rouge_hc"
+CONF_GRID_ALLOW = "grid_allow"
+CONF_GRID_ALLOW_BLEU = "grid_allow_bleu"
+CONF_GRID_ALLOW_BLANC_HC = "grid_allow_blanc_hc"
+CONF_GRID_ALLOW_ROUGE_HC = "grid_allow_rouge_hc"
 
 # Tempo default values
-DEFAULT_TEMPO_ALLOW_BLANC_HP = False  # Blanc HP : off sauf solaire
-DEFAULT_TEMPO_ALLOW_ROUGE_HP = False  # Rouge HP : toujours off (même avec solaire, configurable)
-DEFAULT_TEMPO_ALLOW_ROUGE_HC = True  # Rouge HC : autorisé (tarif HC avantageux)
+DEFAULT_GRID_ALLOW_BLEU = True
+DEFAULT_GRID_ALLOW_BLANC_HC = False
+DEFAULT_GRID_ALLOW_ROUGE_HC = False
 
 # Tempo color values (as returned by rtetempo integration)
 TEMPO_COLOR_BLEU = "Bleu"
@@ -104,7 +117,7 @@ MODE_MANUAL = "manual"
 MODE_OFF = "off"
 
 # Update interval
-UPDATE_INTERVAL_SECONDS = 60
+UPDATE_INTERVAL_SECONDS = 300  # 5 minutes
 
 # Storage key for persistence
 STORAGE_KEY = f"{DOMAIN}_data"

@@ -2,49 +2,58 @@
 
 from __future__ import annotations
 
-from typing import Self
+from typing import Any, Self
 
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import selector
 
 from .const import (
-    CONF_FILTRATION_END_HOUR,
-    CONF_FILTRATION_START_HOUR,
-    CONF_GRID_CONSUMPTION_SENSOR,
+    CONF_ACCEPTED_CONSO_BLANC,
+    CONF_ACCEPTED_CONSO_BLEU,
+    CONF_ACCEPTED_CONSO_ROUGE,
+    CONF_GRID_ALLOW,
+    CONF_GRID_ALLOW_BLANC_HC,
+    CONF_GRID_ALLOW_BLEU,
+    CONF_GRID_ALLOW_ROUGE_HC,
+    CONF_GRID_FILTRATION_END_HOUR,
+    CONF_GRID_FILTRATION_START_HOUR,
+    CONF_GRID_POWER_SENSOR,
     CONF_MAX_DAILY_DURATION,
     CONF_MIN_DAILY_DURATION,
     CONF_MIN_SOLAR_POWER,
-    CONF_PUMP_POWER_W,
+    CONF_PUMP_START_POWER_THRESHOLD,
     CONF_PUMP_SWITCH,
-    CONF_ROUGE_SURPLUS_MARGIN_W,
+    CONF_RESET_DAILY_HOUR,
+    CONF_SOLAR_FILTRATION_END_HOUR,
+    CONF_SOLAR_FILTRATION_START_HOUR,
     CONF_SOLAR_POWER_SENSOR,
-    CONF_SOLAR_PRIORITY,
-    CONF_TEMPO_ALLOW_BLANC_HP,
-    CONF_TEMPO_ALLOW_ROUGE_HC,
-    CONF_TEMPO_ALLOW_ROUGE_HP,
     CONF_TEMPO_COLOR_SENSOR,
     CONF_TEMPO_HC_SENSOR,
     CONF_WATER_HEATER_HYSTERESIS,
     CONF_WATER_HEATER_MIN_TEMP,
     CONF_WATER_HEATER_TEMP_SENSOR,
     CONF_WATER_TEMP_SENSOR,
-    DEFAULT_FILTRATION_END_HOUR,
-    DEFAULT_FILTRATION_START_HOUR,
+    DEFAULT_ACCEPTED_CONSO_BLANC,
+    DEFAULT_ACCEPTED_CONSO_BLEU,
+    DEFAULT_ACCEPTED_CONSO_ROUGE,
+    DEFAULT_GRID_ALLOW_BLANC_HC,
+    DEFAULT_GRID_ALLOW_BLEU,
+    DEFAULT_GRID_ALLOW_ROUGE_HC,
+    DEFAULT_GRID_FILTRATION_END_HOUR,
+    DEFAULT_GRID_FILTRATION_START_HOUR,
     DEFAULT_MAX_DAILY_DURATION,
     DEFAULT_MIN_DAILY_DURATION,
     DEFAULT_MIN_SOLAR_POWER,
-    DEFAULT_PUMP_POWER_W,
-    DEFAULT_ROUGE_SURPLUS_MARGIN_W,
-    DEFAULT_SOLAR_PRIORITY,
-    DEFAULT_TEMPO_ALLOW_BLANC_HP,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HC,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HP,
+    DEFAULT_PUMP_START_POWER_THRESHOLD,
+    DEFAULT_RESET_DAILY_HOUR,
+    DEFAULT_SOLAR_FILTRATION_END_HOUR,
+    DEFAULT_SOLAR_FILTRATION_START_HOUR,
     DEFAULT_WATER_HEATER_HYSTERESIS,
     DEFAULT_WATER_HEATER_MIN_TEMP,
     DOMAIN,
@@ -79,15 +88,21 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Required(CONF_WATER_TEMP_SENSOR): selector.EntitySelector(
                     selector.EntitySelectorConfig(
-                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN],
-                        # device_class="temperature",
+                        domain=[SENSOR_DOMAIN],  # , INPUT_NUMBER_DOMAIN],
+                        device_class="temperature",
                     )
                 ),
                 vol.Required(CONF_SOLAR_POWER_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN], device_class="power")
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN],  # , INPUT_NUMBER_DOMAIN],
+                        device_class="power",
+                    )
                 ),
-                vol.Optional(CONF_GRID_CONSUMPTION_SENSOR): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=[SENSOR_DOMAIN], device_class="power")
+                vol.Optional(CONF_GRID_POWER_SENSOR): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=[SENSOR_DOMAIN],  # , INPUT_NUMBER_DOMAIN],
+                        device_class="power",
+                    )
                 ),
                 # Tempo RTE — optionnel mais recommandé
                 vol.Optional(CONF_TEMPO_COLOR_SENSOR): selector.EntitySelector(
@@ -99,12 +114,13 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Ballon ECS (MSunPV) — optionnel, priorité sur la pompe
                 vol.Optional(CONF_WATER_HEATER_TEMP_SENSOR): selector.EntitySelector(
                     selector.EntitySelectorConfig(
-                        domain=[SENSOR_DOMAIN, INPUT_NUMBER_DOMAIN],
+                        domain=[SENSOR_DOMAIN],  # , INPUT_NUMBER_DOMAIN],
                         device_class="temperature",
                     )
                 ),
             }
         )
+        self.add_suggested_values_to_schema
 
         return self.async_show_form(
             step_id="user",
@@ -114,7 +130,7 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry) -> config_entries.OptionsFlow:
         """Return the options flow handler."""
         # HA >= 2024.x : OptionsFlow.config_entry est une propriété en lecture seule
         # fournie automatiquement par HA — ne pas passer config_entry au constructeur.
@@ -132,7 +148,9 @@ class PoolFiltrationConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
     """Options flow — no __init__ needed, HA injects config_entry automatically."""
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Manage the integration options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -142,6 +160,72 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
         schema = vol.Schema(
             {
                 # --- Filtration ---
+                vol.Required(
+                    CONF_RESET_DAILY_HOUR,
+                    default=options.get(CONF_RESET_DAILY_HOUR, DEFAULT_RESET_DAILY_HOUR),
+                    description="doit correspondre avec la fin des heures creuses de nuit",
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=23,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
+                    )
+                ),
+                vol.Required(
+                    CONF_MIN_DAILY_DURATION,
+                    default=options.get(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=4,
+                        step=0.5,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
+                    )
+                ),
+                vol.Required(
+                    CONF_MAX_DAILY_DURATION,
+                    default=options.get(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=2,
+                        max=24,
+                        step=0.5,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
+                    )
+                ),
+                # -----------------------------------------
+                vol.Required(
+                    CONF_SOLAR_FILTRATION_START_HOUR,
+                    default=options.get(
+                        CONF_SOLAR_FILTRATION_START_HOUR, DEFAULT_SOLAR_FILTRATION_START_HOUR
+                    ),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=23,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
+                    )
+                ),
+                vol.Required(
+                    CONF_SOLAR_FILTRATION_END_HOUR,
+                    default=options.get(
+                        CONF_SOLAR_FILTRATION_END_HOUR, DEFAULT_SOLAR_FILTRATION_END_HOUR
+                    ),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1,
+                        max=24,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
+                    )
+                ),
                 vol.Optional(
                     CONF_MIN_SOLAR_POWER,
                     default=options.get(CONF_MIN_SOLAR_POWER, DEFAULT_MIN_SOLAR_POWER),
@@ -152,98 +236,6 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                         step=50,
                         unit_of_measurement="W",
                         mode=selector.NumberSelectorMode.SLIDER,  #  "slider",
-                    )
-                ),
-                vol.Optional(
-                    CONF_SOLAR_PRIORITY,
-                    default=options.get(CONF_SOLAR_PRIORITY, DEFAULT_SOLAR_PRIORITY),
-                ): selector.BooleanSelector(),
-                vol.Optional(
-                    CONF_MIN_DAILY_DURATION,
-                    default=options.get(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=6,
-                        step=0.5,
-                        unit_of_measurement="h",
-                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
-                    )
-                ),
-                vol.Optional(
-                    CONF_MAX_DAILY_DURATION,
-                    default=options.get(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=4,
-                        max=24,
-                        step=0.5,
-                        unit_of_measurement="h",
-                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
-                    )
-                ),
-                vol.Optional(
-                    CONF_FILTRATION_START_HOUR,
-                    default=options.get(CONF_FILTRATION_START_HOUR, DEFAULT_FILTRATION_START_HOUR),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=23,
-                        step=1,
-                        unit_of_measurement="h",
-                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
-                    )
-                ),
-                vol.Optional(
-                    CONF_FILTRATION_END_HOUR,
-                    default=options.get(CONF_FILTRATION_END_HOUR, DEFAULT_FILTRATION_END_HOUR),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1,
-                        max=24,
-                        step=1,
-                        unit_of_measurement="h",
-                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
-                    )
-                ),
-                # --- Tempo ---
-                vol.Optional(
-                    CONF_TEMPO_ALLOW_BLANC_HP,
-                    default=options.get(CONF_TEMPO_ALLOW_BLANC_HP, DEFAULT_TEMPO_ALLOW_BLANC_HP),
-                ): selector.BooleanSelector(),
-                vol.Optional(
-                    CONF_TEMPO_ALLOW_ROUGE_HC,
-                    default=options.get(CONF_TEMPO_ALLOW_ROUGE_HC, DEFAULT_TEMPO_ALLOW_ROUGE_HC),
-                ): selector.BooleanSelector(),
-                vol.Optional(
-                    CONF_TEMPO_ALLOW_ROUGE_HP,
-                    default=options.get(CONF_TEMPO_ALLOW_ROUGE_HP, DEFAULT_TEMPO_ALLOW_ROUGE_HP),
-                ): selector.BooleanSelector(),
-                # --- Puissance pompe (calcul surplus jour Rouge) ---
-                vol.Optional(
-                    CONF_PUMP_POWER_W,
-                    default=options.get(CONF_PUMP_POWER_W, DEFAULT_PUMP_POWER_W),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=100,
-                        max=3000,
-                        step=50,
-                        unit_of_measurement="W",
-                        mode=selector.NumberSelectorMode.SLIDER,  # "slider",
-                    )
-                ),
-                vol.Optional(
-                    CONF_ROUGE_SURPLUS_MARGIN_W,
-                    default=options.get(
-                        CONF_ROUGE_SURPLUS_MARGIN_W, DEFAULT_ROUGE_SURPLUS_MARGIN_W
-                    ),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=0,
-                        max=500,
-                        step=10,
-                        unit_of_measurement="W",
-                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
                     )
                 ),
                 # --- Priorité ballon ECS (MSunPV) ---
@@ -264,15 +256,105 @@ class SmartPoolFiltrationManagerOptionsFlow(config_entries.OptionsFlow):
                     default=options.get(
                         CONF_WATER_HEATER_HYSTERESIS, DEFAULT_WATER_HEATER_HYSTERESIS
                     ),
+                ): cv.positive_float,
+                vol.Optional(
+                    CONF_PUMP_START_POWER_THRESHOLD,
+                    default=options.get(
+                        CONF_PUMP_START_POWER_THRESHOLD, DEFAULT_PUMP_START_POWER_THRESHOLD
+                    ),
                 ): selector.NumberSelector(
                     selector.NumberSelectorConfig(
-                        min=0.5,
-                        max=10,
-                        step=0.5,
-                        unit_of_measurement="°C",
+                        min=-2000,
+                        max=2000,
+                        step=100,
+                        unit_of_measurement="W",
                         mode=selector.NumberSelectorMode.SLIDER,  # "slider",
                     )
                 ),
+                # -----------------------------------------
+                vol.Optional(
+                    CONF_ACCEPTED_CONSO_BLEU,
+                    default=options.get(CONF_ACCEPTED_CONSO_BLEU, DEFAULT_ACCEPTED_CONSO_BLEU),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=4000,
+                        step=100,
+                        unit_of_measurement="W",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider",
+                    )
+                ),
+                vol.Optional(
+                    CONF_ACCEPTED_CONSO_BLANC,
+                    default=options.get(CONF_ACCEPTED_CONSO_BLANC, DEFAULT_ACCEPTED_CONSO_BLANC),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=4000,
+                        step=100,
+                        unit_of_measurement="W",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider",
+                    )
+                ),
+                vol.Optional(
+                    CONF_ACCEPTED_CONSO_ROUGE,
+                    default=options.get(CONF_ACCEPTED_CONSO_ROUGE, DEFAULT_ACCEPTED_CONSO_ROUGE),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=4000,
+                        step=100,
+                        unit_of_measurement="W",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider",
+                    )
+                ),
+                # *****************************************
+                vol.Optional(
+                    CONF_GRID_FILTRATION_START_HOUR,
+                    default=options.get(
+                        CONF_GRID_FILTRATION_START_HOUR, DEFAULT_GRID_FILTRATION_START_HOUR
+                    ),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0,
+                        max=23,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
+                    )
+                ),
+                vol.Optional(
+                    CONF_GRID_FILTRATION_END_HOUR,
+                    default=options.get(
+                        CONF_GRID_FILTRATION_END_HOUR, DEFAULT_GRID_FILTRATION_END_HOUR
+                    ),
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=1,
+                        max=24,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=selector.NumberSelectorMode.SLIDER,  # "slider"
+                    )
+                ),
+                # -----------------------------------------
+                # --- Tempo ---
+                vol.Optional(
+                    CONF_GRID_ALLOW,
+                    default=options.get(CONF_GRID_ALLOW, DEFAULT_GRID_ALLOW_BLEU),
+                ): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_GRID_ALLOW_BLEU,
+                    default=options.get(CONF_GRID_ALLOW_BLEU, DEFAULT_GRID_ALLOW_BLEU),
+                ): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_GRID_ALLOW_BLANC_HC,
+                    default=options.get(CONF_GRID_ALLOW_BLANC_HC, DEFAULT_GRID_ALLOW_BLANC_HC),
+                ): selector.BooleanSelector(),
+                vol.Optional(
+                    CONF_GRID_ALLOW_ROUGE_HC,
+                    default=options.get(CONF_GRID_ALLOW_ROUGE_HC, DEFAULT_GRID_ALLOW_ROUGE_HC),
+                ): selector.BooleanSelector(),
             }
         )
 

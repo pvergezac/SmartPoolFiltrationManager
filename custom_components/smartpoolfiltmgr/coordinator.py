@@ -11,37 +11,47 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_FILTRATION_END_HOUR,
-    CONF_FILTRATION_START_HOUR,
-    CONF_GRID_CONSUMPTION_SENSOR,
+    CONF_ACCEPTED_CONSO_BLANC,
+    CONF_ACCEPTED_CONSO_BLEU,
+    CONF_ACCEPTED_CONSO_ROUGE,
+    CONF_GRID_ALLOW_BLANC_HC,
+    CONF_GRID_ALLOW_BLEU,
+    CONF_GRID_ALLOW_ROUGE_HC,
+    CONF_GRID_FILTRATION_END_HOUR,
+    CONF_GRID_FILTRATION_START_HOUR,
+    CONF_GRID_POWER_SENSOR,
     CONF_MAX_DAILY_DURATION,
     CONF_MIN_DAILY_DURATION,
     CONF_MIN_SOLAR_POWER,
     CONF_PUMP_POWER_W,
+    CONF_PUMP_START_POWER_THRESHOLD,
     CONF_PUMP_SWITCH,
-    CONF_ROUGE_SURPLUS_MARGIN_W,
+    CONF_RESET_DAILY_HOUR,
+    CONF_SOLAR_FILTRATION_END_HOUR,
+    CONF_SOLAR_FILTRATION_START_HOUR,
     CONF_SOLAR_POWER_SENSOR,
-    CONF_SOLAR_PRIORITY,
-    CONF_TEMPO_ALLOW_BLANC_HP,
-    CONF_TEMPO_ALLOW_ROUGE_HC,
-    CONF_TEMPO_ALLOW_ROUGE_HP,
     CONF_TEMPO_COLOR_SENSOR,
     CONF_TEMPO_HC_SENSOR,
     CONF_WATER_HEATER_HYSTERESIS,
     CONF_WATER_HEATER_MIN_TEMP,
     CONF_WATER_HEATER_TEMP_SENSOR,
     CONF_WATER_TEMP_SENSOR,
-    DEFAULT_FILTRATION_END_HOUR,
-    DEFAULT_FILTRATION_START_HOUR,
+    DEFAULT_ACCEPTED_CONSO_BLANC,
+    DEFAULT_ACCEPTED_CONSO_BLEU,
+    DEFAULT_ACCEPTED_CONSO_ROUGE,
+    DEFAULT_GRID_ALLOW_BLANC_HC,
+    DEFAULT_GRID_ALLOW_BLEU,
+    DEFAULT_GRID_ALLOW_ROUGE_HC,
+    DEFAULT_GRID_FILTRATION_END_HOUR,
+    DEFAULT_GRID_FILTRATION_START_HOUR,
     DEFAULT_MAX_DAILY_DURATION,
     DEFAULT_MIN_DAILY_DURATION,
     DEFAULT_MIN_SOLAR_POWER,
     DEFAULT_PUMP_POWER_W,
-    DEFAULT_ROUGE_SURPLUS_MARGIN_W,
-    DEFAULT_SOLAR_PRIORITY,
-    DEFAULT_TEMPO_ALLOW_BLANC_HP,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HC,
-    DEFAULT_TEMPO_ALLOW_ROUGE_HP,
+    DEFAULT_PUMP_START_POWER_THRESHOLD,
+    DEFAULT_RESET_DAILY_HOUR,
+    DEFAULT_SOLAR_FILTRATION_END_HOUR,
+    DEFAULT_SOLAR_FILTRATION_START_HOUR,
     DEFAULT_WATER_HEATER_HYSTERESIS,
     DEFAULT_WATER_HEATER_MIN_TEMP,
     DOMAIN,
@@ -60,25 +70,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def calculate_target_duration(temp: float) -> float:
-    """
-    Calculate required filtration duration in minutes based on water temperature.
-    Uses the standard pool rule: T/2 hours, with min/max bounds.
-    Interpolates between known points for precision.
-    """
-    if temp <= TEMP_DURATION_TABLE[0][0]:
-        return TEMP_DURATION_TABLE[0][1]
-
-    for i in range(len(TEMP_DURATION_TABLE) - 1):
-        t1, d1 = TEMP_DURATION_TABLE[i]
-        t2, d2 = TEMP_DURATION_TABLE[i + 1]
-        if t1 <= temp <= t2:
-            ratio = (temp - t1) / (t2 - t1)
-            return d1 + ratio * (d2 - d1)
-
-    return TEMP_DURATION_TABLE[len(TEMP_DURATION_TABLE) - 1][1]
 
 
 class PoolFiltrationCoordinator(DataUpdateCoordinator):
@@ -154,54 +145,48 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         return float(self._get_option(CONF_MIN_SOLAR_POWER, DEFAULT_MIN_SOLAR_POWER))
 
     @property
-    def solar_priority(self) -> bool:
-        """Return True if solar priority mode is enabled."""
-        return bool(self._get_option(CONF_SOLAR_PRIORITY, DEFAULT_SOLAR_PRIORITY))
-
-    @property
     def min_daily_duration_mn(self) -> float:
         """Return minimum daily pump duration in minutes."""
-        return float(self._get_option(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION))
+        return 60 * float(self._get_option(CONF_MIN_DAILY_DURATION, DEFAULT_MIN_DAILY_DURATION))
 
     @property
     def max_daily_duration_mn(self) -> float:
         """Return maximum daily pump duration in minutes."""
-        return float(self._get_option(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION))
+        return 60 * float(self._get_option(CONF_MAX_DAILY_DURATION, DEFAULT_MAX_DAILY_DURATION))
 
     @property
-    def filtration_start_hour(self) -> int:
+    def solar_filtration_start_hour(self) -> int:
         """Return the hour when filtration should start."""
-        return int(self._get_option(CONF_FILTRATION_START_HOUR, DEFAULT_FILTRATION_START_HOUR))
+        return int(
+            self._get_option(CONF_SOLAR_FILTRATION_START_HOUR, DEFAULT_SOLAR_FILTRATION_START_HOUR)
+        )
 
     @property
-    def filtration_end_hour(self) -> int:
+    def solar_filtration_end_hour(self) -> int:
         """Return the hour when filtration should end."""
-        return int(self._get_option(CONF_FILTRATION_END_HOUR, DEFAULT_FILTRATION_END_HOUR))
+        return int(
+            self._get_option(CONF_SOLAR_FILTRATION_END_HOUR, DEFAULT_SOLAR_FILTRATION_END_HOUR)
+        )
 
     @property
-    def tempo_allow_blanc_hp(self) -> bool:
+    def grid_allow_bleu(self) -> bool:
         """Return True if Tempo Blanc HP is allowed."""
-        return bool(self._get_option(CONF_TEMPO_ALLOW_BLANC_HP, DEFAULT_TEMPO_ALLOW_BLANC_HP))
+        return bool(self._get_option(CONF_GRID_ALLOW_BLEU, DEFAULT_GRID_ALLOW_BLEU))
 
     @property
-    def tempo_allow_rouge_hc(self) -> bool:
+    def grid_allow_blanc_hc(self) -> bool:
         """Return True if Tempo Rouge HC is allowed."""
-        return bool(self._get_option(CONF_TEMPO_ALLOW_ROUGE_HC, DEFAULT_TEMPO_ALLOW_ROUGE_HC))
+        return bool(self._get_option(CONF_GRID_ALLOW_BLANC_HC, DEFAULT_GRID_ALLOW_BLANC_HC))
 
     @property
-    def tempo_allow_rouge_hp(self) -> bool:
+    def grid_allow_rouge_hc(self) -> bool:
         """Return True if Tempo Rouge HP is allowed."""
-        return bool(self._get_option(CONF_TEMPO_ALLOW_ROUGE_HP, DEFAULT_TEMPO_ALLOW_ROUGE_HP))
+        return bool(self._get_option(CONF_GRID_ALLOW_ROUGE_HC, DEFAULT_GRID_ALLOW_ROUGE_HC))
 
     @property
     def pump_power_w(self) -> float:
         """Return the configured pump power in Watts."""
         return float(self._get_option(CONF_PUMP_POWER_W, DEFAULT_PUMP_POWER_W))
-
-    @property
-    def rouge_surplus_margin_w(self) -> float:
-        """Safety margin in Watts to avoid micro grid draws due to measurement lag."""
-        return float(self._get_option(CONF_ROUGE_SURPLUS_MARGIN_W, DEFAULT_ROUGE_SURPLUS_MARGIN_W))
 
     @property
     def water_heater_min_temp(self) -> float:
@@ -214,6 +199,41 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         return float(
             self._get_option(CONF_WATER_HEATER_HYSTERESIS, DEFAULT_WATER_HEATER_HYSTERESIS)
         )
+
+    @property
+    def reset_daily_hour(self) -> int:
+        """Reset daily hour."""
+        return self._get_option(CONF_RESET_DAILY_HOUR, DEFAULT_RESET_DAILY_HOUR)
+
+    @property
+    def grid_filtration_start_hour(self) -> int:
+        return self._get_option(CONF_GRID_FILTRATION_START_HOUR, DEFAULT_GRID_FILTRATION_START_HOUR)
+
+    @property
+    def grid_filtration_end_hour(self) -> int:
+        return self._get_option(CONF_GRID_FILTRATION_END_HOUR, DEFAULT_GRID_FILTRATION_END_HOUR)
+
+    @property
+    def start_power_threshold(self) -> float:
+        """Return the power threshold for starting the pump on solar surplus."""
+        return float(
+            self._get_option(CONF_PUMP_START_POWER_THRESHOLD, DEFAULT_PUMP_START_POWER_THRESHOLD)
+        )
+
+    @property
+    def accepted_conso_bleu(self) -> float:
+        """Accepted conso Bleu."""
+        return self._get_option(CONF_ACCEPTED_CONSO_BLEU, DEFAULT_ACCEPTED_CONSO_BLEU)
+
+    @property
+    def accepted_conso_blanc(self) -> float:
+        """Accepted conso Blanc."""
+        return self._get_option(CONF_ACCEPTED_CONSO_BLANC, DEFAULT_ACCEPTED_CONSO_BLANC)
+
+    @property
+    def accepted_conso_rouge(self) -> float:
+        """Accepted conso Rouge."""
+        return self._get_option(CONF_ACCEPTED_CONSO_ROUGE, DEFAULT_ACCEPTED_CONSO_ROUGE)
 
     # ------------------------------------------------------------------
     # Sensor reading helpers
@@ -246,9 +266,12 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         entity_id = self.config_entry.data.get(CONF_SOLAR_POWER_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
-    def get_grid_consumption(self) -> float | None:
-        """Return current grid consumption in Watts, or None if not configured."""
-        entity_id = self.config_entry.data.get(CONF_GRID_CONSUMPTION_SENSOR)
+    def get_grid_power(self) -> float | None:
+        """
+        Return current grid power in Watts, or None if not configured.
+        Negative = exporting, positive = importing.
+        """
+        entity_id = self.config_entry.data.get(CONF_GRID_POWER_SENSOR)
         return self._get_sensor_float(entity_id) if entity_id else None
 
     def get_solar_surplus_for_pump(self) -> float | None:
@@ -274,7 +297,7 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         Returns None if either sensor is unavailable.
         """
         solar = self.get_solar_power()
-        grid_net = self.get_grid_consumption()
+        grid_net = self.get_grid_power()
 
         if solar is None or grid_net is None:
             return None
@@ -385,14 +408,32 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             else:
                 return True, f"water_heater_ok_{temp:.1f}c"
 
+    def calculate_target_duration(self, temp: float) -> float:
+        """
+        Calculate required filtration duration in minutes based on water temperature.
+        Uses the standard pool rule: T/2 hours, with min/max bounds.
+        Interpolates between known points for precision.
+        """
+        if temp <= TEMP_DURATION_TABLE[0][0]:
+            return TEMP_DURATION_TABLE[0][1]
+
+        for i in range(len(TEMP_DURATION_TABLE) - 1):
+            t1, d1 = TEMP_DURATION_TABLE[i]
+            t2, d2 = TEMP_DURATION_TABLE[i + 1]
+            if t1 <= temp <= t2:
+                ratio = (temp - t1) / (t2 - t1)
+                return d1 + ratio * (d2 - d1)
+
+        return TEMP_DURATION_TABLE[len(TEMP_DURATION_TABLE) - 1][1]
+
     def get_target_duration(self) -> float:
         """Calculate today's target filtration duration in minutes."""
         temp = self.get_water_temperature()
         if temp is None:
             return self.min_daily_duration_mn
 
-        calculated = calculate_target_duration(temp)
-        return max(self.min_daily_duration_mn, min(self.max_daily_duration_mn, calculated))
+        duration = self.calculate_target_duration(temp)
+        return max(self.min_daily_duration_mn, min(self.max_daily_duration_mn, duration))
 
     # ------------------------------------------------------------------
     # Tempo decision helper
@@ -421,56 +462,23 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         is_hc = self.get_tempo_is_hc()
 
         # Tempo not configured -> no restriction
-        if tempo_color is None:
-            return True, "no_tempo"
+        if tempo_color is None or tempo_color == TEMPO_COLOR_BLEU:
+            if self.grid_allow_bleu:
+                return True, "complement_nuit_allowed"
+            else:
+                return False, "complement_nuit_blocked"
 
-        # ------------------------------------------------------------------
-        # Jour ROUGE : logique stricte de surplus — aucun soutirage réseau
-        # ------------------------------------------------------------------
-        if tempo_color == TEMPO_COLOR_ROUGE:
-            if is_hc:
-                # Heures creuses Rouge : tarif HC seulement, configurable
-                if self.tempo_allow_rouge_hc:
-                    return True, "rouge_hc_allowed"
-                return False, "rouge_hc_blocked"
+        if tempo_color == TEMPO_COLOR_BLANC and is_hc:
+            if self.grid_allow_blanc_hc:
+                return True, "complement_nuit_blanc_hc_allowed"
+            else:
+                return False, "complement_nuit_blanc_hc_blocked"
 
-            # Heures pleines Rouge : on vérifie le surplus réel
-            surplus = self.get_solar_surplus_for_pump()
-
-            if surplus is None:
-                # Capteurs indisponibles → prudence maximale, on bloque
-                _LOGGER.warning(
-                    "Rouge HP: grid/solar sensors unavailable, blocking pump to avoid grid draw"
-                )
-                return False, "rouge_hp_no_sensor"
-
-            required = self.pump_power_w + self.rouge_surplus_margin_w
-            if surplus >= required:
-                return True, f"rouge_hp_surplus_ok_{surplus:.0f}W"
-
-            return (
-                False,
-                f"rouge_hp_surplus_insufficient_{surplus:.0f}W_need_{required:.0f}W",
-            )
-
-        # ------------------------------------------------------------------
-        # Jour BLANC
-        # ------------------------------------------------------------------
-        if tempo_color == TEMPO_COLOR_BLANC:
-            if is_hc:
-                return True, "blanc_hc"
-            # HP : le surplus solaire simple suffit (pas besoin du calcul précis)
-            if solar_available:
-                return True, "blanc_hp_solar"
-            if self.tempo_allow_blanc_hp:
-                return True, "blanc_hp_allowed"
-            return False, "blanc_hp_blocked"
-
-        # ------------------------------------------------------------------
-        # Jour BLEU : toujours autorisé
-        # ------------------------------------------------------------------
-        if tempo_color == TEMPO_COLOR_BLEU:
-            return True, "bleu_grid"
+        if tempo_color == TEMPO_COLOR_ROUGE and not is_hc:
+            if self.grid_allow_rouge_hc:
+                return True, "rouge_hc_allowed"
+            else:
+                return False, "complement_nuitrouge_hc_blocked"
 
         # Couleur inconnue -> prudence
         _LOGGER.warning("Unknown Tempo color '%s', blocking grid run", tempo_color)
@@ -505,18 +513,63 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             return False, "mode_off"
 
         # 3. Max daily duration reached
-        target_hours = self.get_target_duration()
-        target_minutes = target_hours * 60
-        if self._daily_runtime_minutes >= target_minutes:
+        target_duration = self.get_target_duration()
+        if self._daily_runtime_minutes >= target_duration:
+            _LOGGER.info(
+                "Daily runtime %.0f min >= target %.0f min, stopping pump",
+                self._daily_runtime_minutes,
+                target_duration,
+            )
             return False, "quota_reached"
 
         # 4. Outside allowed time window
         current_hour = now.hour + now.minute / 60.0
-        if not (
-            (self.filtration_start_hour <= current_hour)
-            and (current_hour < self.filtration_end_hour)
-        ):
+        is_solar_period: bool = (
+            self.solar_filtration_start_hour <= current_hour
+            and current_hour < self.solar_filtration_end_hour
+        )
+
+        is_grid_period: bool = (
+            self.grid_filtration_start_hour < self.grid_filtration_end_hour
+            and self.grid_filtration_start_hour <= current_hour
+            and current_hour < self.grid_filtration_end_hour
+        ) or (
+            self.grid_filtration_start_hour > self.grid_filtration_end_hour
+            and (
+                current_hour >= self.grid_filtration_start_hour
+                or current_hour < self.grid_filtration_end_hour
+            )
+        )
+
+        if not is_solar_period and not is_grid_period:
+            _LOGGER.info(
+                "Current time %.2f outside allowed filtration windows "
+                "(solar: %.2f-%.2f, grid: %.2f-%.2f), stopping pump",
+                current_hour,
+                self.solar_filtration_start_hour,
+                self.solar_filtration_end_hour,
+                self.grid_filtration_start_hour,
+                self.grid_filtration_end_hour,
+            )
             return False, "outside_hours"
+
+        solar_power = self.get_solar_power()
+        conso = self.get_grid_power()
+        color = self.get_tempo_color()
+
+        _LOGGER.debug(
+            "mode=%s, solar_period=%s, grid_period=%s, solar=%.0fW, conso=%.0fW, "
+            "tempo_color=%s, pump %s, runtime=%.0f/%.0f min",
+            self._mode,
+            is_solar_period,
+            is_grid_period,
+            solar_power or 0,
+            conso or 0,
+            color,
+            "is running" if self._pump_running else "is stopped",
+            self._daily_runtime_minutes,
+            target_duration,
+        )
 
         # 5. Water heater (ballon ECS) priority — checked before solar/Tempo
         #    The ballon must be sufficiently hot before we can claim solar surplus for the pool.
@@ -524,39 +577,117 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         #    is still cold the MSunPV router will be using that surplus to heat water.
         #    Manual mode bypasses this check (operator takes responsibility).
         wh_ok, wh_reason = self._check_water_heater_priority()
-        if not wh_ok:
+        if is_solar_period and not wh_ok:
+            _LOGGER.info("Water heater priority blocks pump during solar period: %s", wh_reason)
             return False, wh_reason
 
-        solar_power = self.get_solar_power()
-        solar_available = solar_power is not None and solar_power >= self.min_solar_power
+        # 6. Solar period (MODE_SOLAR ou MODE_AUTO)
+        if is_solar_period:
+            # ------------------------------------------------
+            # Arret de la pompe si les capteurs sont indisponibles
+            if solar_power is None:
+                _LOGGER.info("Solar period - solar power sensor unavailable, cannot run pump")
+                return False, "solar_period_no_sensor"
+            if conso is None:
+                _LOGGER.info("Solar period: grid power sensor unavailable, cannot run pump")
+                return False, "solar_period_no_grid_sensor"
 
-        # 6. Solar-only mode
-        if self._mode == MODE_SOLAR:
-            if solar_available:
-                return True, "solar_only_mode_solar"
-            return False, "solar_only_mode_no_solar"
+            # ------------------------------------------------
+            # Arret de la pompe si la puissance solaire est inférieure au seuil minimum
+            if solar_power < self.min_solar_power:
+                _LOGGER.info(
+                    "Solar period - solar power %.0fW below minimum %.0fW, cannot run pump",
+                    solar_power,
+                    self.min_solar_power,
+                )
+                return False, "solar_period_below_min_power"
 
-        # 7. Auto mode
-        if self._mode == MODE_AUTO:
-            # 7a. Solaire dispo -> toujours ON (ballon déjà prioritaire vérifié ci-dessus)
-            if solar_available:
-                return True, "auto_solar"
+            # ------------------------------------------------
+            # Arret de la pompe si la consommatio est supérieure au seuil de consomation accepté
+            # suivant  la couleur du jour Tempo
+            if color == TEMPO_COLOR_ROUGE and conso >= self.accepted_conso_rouge:
+                _LOGGER.info(
+                    "Solar period - grid consumption %.0fW exceeds accepted %.0fW for ROUGE, "
+                    "cannot run pump",
+                    conso,
+                    self.accepted_conso_rouge,
+                )
+                return False, "solar_period_exceeds_rouge"
+            if color == TEMPO_COLOR_BLANC and conso >= self.accepted_conso_blanc:
+                _LOGGER.info(
+                    "Solar period - grid consumption %.0fW exceeds accepted %.0fW for BLANC, "
+                    "cannot run pump",
+                    conso,
+                    self.accepted_conso_blanc,
+                )
+                return False, "solar_period_exceeds_blanc"
+            if (color == TEMPO_COLOR_BLEU or color is None) and conso >= self.accepted_conso_bleu:
+                _LOGGER.info(
+                    "Solar period - grid consumption %.0fW exceeds accepted %.0fW for BLEU, "
+                    "cannot run pump",
+                    conso,
+                    self.accepted_conso_bleu,
+                )
+                return False, "solar_period_exceeds_bleu"
 
+            # ------------------------------------------------
+            # Demarrage de la pompe si elle est à l'arret et que la consomation est inférieure
+            # au seuil de demarrage
+            if (not self._pump_running) and conso < self.start_power_threshold:
+                _LOGGER.info(
+                    "Solar period - grid consumption %.0fW below start threshold %.0fW, "
+                    "can run pump",
+                    conso,
+                    self.start_power_threshold,
+                )
+                return True, "solar_period_below_start_threshold"
+
+        # 7. Grid period (MODE_Auto)
+        if is_grid_period and self._mode == MODE_AUTO:
             # 7b. Verifier si Tempo autorise le reseau
+
+            # Tempo not configured -> no restriction
+            if color is None or color == TEMPO_COLOR_BLEU:
+                if self.grid_allow_bleu:
+                    _LOGGER.info("Grid period - Tempo BLEU, grid allowed")
+                    return True, "complement_nuit_allowed"
+            elif color == TEMPO_COLOR_BLANC and self.get_tempo_is_hc():
+                if self.grid_allow_blanc_hc:
+                    _LOGGER.info("Grid period - Tempo BLANC HC, grid allowed")
+                    return True, "complement_nuit_blanc_hc_allowed"
+            elif color == TEMPO_COLOR_ROUGE and not self.get_tempo_is_hc():
+                if self.grid_allow_rouge_hc:
+                    _LOGGER.info("Grid period - Tempo ROUGE HP, grid allowed")
+                    return True, "rouge_hc_allowed"
+
             tempo_ok, tempo_reason = self._tempo_allows_grid_run(solar_available=False)
             if not tempo_ok:
                 return False, f"tempo_blocked_{tempo_reason}"
 
             # 7c. Tempo OK -> logique de completion
-            remaining_minutes = target_minutes - self._daily_runtime_minutes
-            remaining_window_hours = self.filtration_end_hour - current_hour
+            remaining_minutes = target_duration - self._daily_runtime_minutes
+            remaining_window_hours = self.solar_filtration_end_hour - current_hour
             estimated_solar_minutes = remaining_window_hours * 60 * 0.4
             if remaining_minutes > estimated_solar_minutes:
                 return True, f"auto_grid_{tempo_reason}"
 
             return False, "auto_waiting_for_solar"
 
-        return False, "unknown_mode"
+        # No change: keep current pump state
+        _LOGGER.debug(
+            "No_change - mode=%s, solar_period=%s, grid_period=%s, solar=%.0fW, "
+            "conso=%.0fW, pump %s, tempo_color=%s, runtime=%.0f/%.0f min",
+            self._mode,
+            is_solar_period,
+            is_grid_period,
+            solar_power,
+            conso,
+            "running" if self._pump_running else "stopped",
+            color,
+            self._daily_runtime_minutes,
+            target_duration,
+        )
+        return self._pump_running, "no_change"
 
     # ------------------------------------------------------------------
     # Pump control
@@ -583,9 +714,11 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
 
     def _check_daily_reset(self) -> None:
         """Reset daily counters at midnight."""
-        today = dt_util.now().date()
+        time: datetime = dt_util.now() - timedelta(hours=self.reset_daily_hour)
+        today = time.date()
         if self._last_reset_date != today:
             _LOGGER.info("Daily reset: new filtration day %s", today)
+            # Reset running times
             self._daily_runtime_minutes = 0.0
             self._solar_contribution_minutes = 0.0
             self._hc_contribution_minutes = 0.0
@@ -602,10 +735,10 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
         now = dt_util.now()
         solar_power = self.get_solar_power()
         water_temp = self.get_water_temperature()
-        grid_consumption = self.get_grid_consumption()
+        grid_consumption = self.get_grid_power()
         tempo_color = self.get_tempo_color()
         tempo_is_hc = self.get_tempo_is_hc()
-        target_hours = self.get_target_duration()
+        target_duration = self.get_target_duration()
         solar_surplus = self.get_solar_surplus_for_pump()
         water_heater_temp = self.get_water_heater_temperature()
 
@@ -640,7 +773,7 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
                 tempo_color or "N/A",
                 "HC" if tempo_is_hc else "HP",
                 self._daily_runtime_minutes,
-                target_hours * 60,
+                target_duration,
             )
 
         elif not should_run and self._pump_running:
@@ -648,14 +781,17 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             self._pump_running = False
             self._run_start = None
             _LOGGER.info(
-                "Pump OFF [%s] -- ballon=%.1fC surplus=%.0fW runtime=%.0f/%.0f min tempo=%s %s",
+                "Pump OFF [%s] -- pool=%.1fC ballon=%.1fC solar=%.0fW surplus=%.0fW \
+                    tempo=%s %s runtime=%.0f/%.0f min",
                 reason,
+                water_temp or 0,
                 water_heater_temp or 0,
+                solar_power or 0,
                 solar_surplus or 0,
-                self._daily_runtime_minutes,
-                target_hours * 60,
                 tempo_color or "N/A",
                 "HC" if tempo_is_hc else "HP",
+                self._daily_runtime_minutes,
+                target_duration,
             )
 
         await self._save_state()
@@ -674,7 +810,6 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             "grid_consumption": grid_consumption,
             "solar_surplus_w": solar_surplus,
             "pump_power_w": self.pump_power_w,
-            "rouge_surplus_margin_w": self.rouge_surplus_margin_w,
             "tempo_color": tempo_color or TEMPO_COLOR_UNKNOWN,
             "tempo_is_hc": tempo_is_hc,
             "tempo_configured": tempo_color is not None,
@@ -684,7 +819,7 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             "water_heater_min_temp": self.water_heater_min_temp,
             "water_heater_unlock_threshold": wh_unlock_threshold,
             "daily_runtime_minutes": self._daily_runtime_minutes,
-            "target_duration_minutes": target_hours * 60,
+            "target_duration_minutes": target_duration,
             "solar_contribution_minutes": self._solar_contribution_minutes,
             "hc_contribution_minutes": self._hc_contribution_minutes,
             "last_reset_date": str(self._last_reset_date),

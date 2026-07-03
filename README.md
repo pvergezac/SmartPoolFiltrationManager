@@ -2,6 +2,9 @@
 
 # 🏊 Smart Pool Filtration Manager — Custom Component Home Assistant
 
+![Logo](custom_components/smartpoolfiltmgr/brand/logo.png)
+
+
 **Contrôle intelligent de la pompe de filtration de la piscine.**
 
 ![Home Assistant](https://img.shields.io/badge/home%20assistant-%2341BDF5.svg?style=for-the-badge&logo=home-assistant&logoColor=white) [![Hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs) ![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-0078d7.svg?style=for-the-badge&logo=visual-studio-code&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
@@ -29,7 +32,10 @@
 
 - ⏱️ **Durée calculée automatiquement** selon la règle T°/2 (ex : 24°C → 6h de filtration)
 - ☀️ **Priorité solaire** : la pompe tourne en priorité quand les panneaux produisent suffisamment
-- 🔋 **Complétion intelligente** : si la production solaire ne suffit pas, complète sur le réseau en fin de plage horaire
+- **Priorité ECS** : la chauffe du ballon ECS peut être priorisé si sa température est disponible (en option)
+- **Seuils Marche/Arret pompe** : controle de la pompe en fonction de la puissance solaire et de la consomation réseau
+- **Couleur TEMPO** : limite de consommation réseau en fonction de la couleur du jour TEMPO (en option)
+- 🔋 **Complétion intelligente** : si la production solaire ne suffit pas, complète sur le réseau en fin de journée
 - 📊 **Suivi journalier** : durée filtrée, contribution solaire, progression
 - 🔧 **4 modes de fonctionnement** : Automatique, Solaire uniquement, Manuel, Arrêt forcé
 - 💾 **Persistance** : les compteurs survivent aux redémarrages de HA
@@ -102,12 +108,24 @@ Accessible via le bouton **Configurer** sur la carte de l'intégration :
 
 | Option                      | Défaut     | Description                                   |
 | --------------------------- | ---------- | --------------------------------------------- |
-| Production solaire minimale | 500 W      | Seuil en-dessous duquel le solaire est ignoré |
-| Priorité solaire            | ✅ Activée | Favorise les heures de production PV          |
+| Heure de réinitialisation   | 6 h        | la journée de filtration (fin des HC de nuit) |
 | Durée minimale/jour         | 2 h        | Garantie même si température froide           |
 | Durée maximale/jour         | 12 h       | Plafond absolu                                |
-| Heure de début              | 8h         | Aucune filtration avant cette heure           |
-| Heure de fin                | 20h        | Aucune filtration après cette heure           |
+| Plage solaire - début       | 8 h        | Début de la filtration sur production solaire |
+| Plage solaire - fin         | 20 h       | Fin de la filtration sur production solaire   |
+| Puiss solaire min           | 500 W      | Solaire minimum pour autoriser la pompe       |
+| Temp Bollon ECS min         | 40°        | Temp ballon minimum pour autoriser la pompe   |
+| Hystérésis ECS              | 2°         | Ecart min pour éviter les oscilations         |
+| Conso max démarrage pompe   | 50 W       | Seuil de démarrage                            |
+| Conso max arret pompe       | 500 W      | Seuil conso max (jour BLEU ou sans TEMPO)     |
+| Conso max arret pompe BLANC | 100 W      | Seuil conso max (jour BLANC)                  |
+| Conso max arret pompe       | 50 W       | Seuil conso max (jour ROUGE)                  |
+|                             |            |                                               |
+| Plage compl réseau - début  | 22 h       | Début de complément de filtration (nuit)      |
+| Plage solaire - fin         | 6 h        | Fin de complément de filtration (nuit)        |
+| Complément réseau           | ✅         | Validé (jour BLEU ou sans TEMPO)              |
+| Complément réseau BLANC     | ❌         | Validé (jour BLANC)                           |
+| Complément réseau ROUGE     | ❌         | Validé (jour ROUGE)                           |
 
 ---
 
