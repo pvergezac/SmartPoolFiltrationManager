@@ -1,6 +1,6 @@
 <div align="center">
 
-![alt text](images\bandeau_filtration_piscine.png)
+![alt text](images/bandeau_filtration_piscine.png)
 
 
 # 🏊 Smart Pool Filtration Manager — Custom Component Home Assistant
@@ -267,7 +267,7 @@ cards:
 
 Mon tableau de bord
 
-![alt text](images\image.png)
+![alt text](images/image.png)
 
 ```
 views:
