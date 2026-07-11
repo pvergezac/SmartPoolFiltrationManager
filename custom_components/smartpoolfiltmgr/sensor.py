@@ -31,6 +31,7 @@ async def async_setup_entry(
             PoolModeSensor(coordinator, entry),
             PoolTempoSensor(coordinator, entry),
             PoolWaterHeaterSensor(coordinator, entry),
+            PoolWaterTemperatureSensor(coordinator, entry),
         ]
     )
 
@@ -47,7 +48,7 @@ class PoolBaseSensor(CoordinatorEntity, SensorEntity):
         return {
             "identifiers": {(DOMAIN, self._entry.entry_id)},
             "name": "Smart Pool Filtration Manager",
-            "manufacturer": "Custom",
+            "manufacturer": "pvergezac",
             "model": "Pool Filtration v1.0",
         }
 
@@ -75,8 +76,10 @@ class PoolDailyRuntimeSensor(PoolBaseSensor):
     @property
     def extra_state_attributes(self):
         data = self.coordinator.data or {}
+        hh = int(data.get("daily_runtime_minutes", 0) // 60)
+        mm = int(data.get("daily_runtime_minutes", 0) % 60)
+
         return {
-            "target_minutes": round(data.get("target_duration_minutes", 0), 1),
             "progress_pct": round(
                 min(
                     100,
@@ -86,6 +89,8 @@ class PoolDailyRuntimeSensor(PoolBaseSensor):
                 ),
                 1,
             ),
+            "daily_runtime_hours": round(data.get("daily_runtime_minutes", 0) / 60, 2),
+            "daily_runtime_hm": f"{hh}:{mm:02d}",
             "solar_contribution_minutes": round(data.get("solar_contribution_minutes", 0), 1),
             "hc_contribution_minutes": round(data.get("hc_contribution_minutes", 0), 1),
             "decision_reason": data.get("decision_reason", ""),
@@ -115,7 +120,11 @@ class PoolTargetDurationSensor(PoolBaseSensor):
     def extra_state_attributes(self):
         data = self.coordinator.data or {}
         temp = data.get("water_temp")
+        hh = int(data.get("target_duration_minutes", 0) // 60)
+        mm = int(data.get("target_duration_minutes", 0) % 60)
         return {
+            "target_duration_hours": round(data.get("target_duration_minutes", 0) / 60, 2),
+            "target_duration_hm": f"{hh}:{mm:02d}",
             "water_temperature_c": temp,
             "calculation_method": "T/2 rule (interpolated)",
         }
@@ -266,6 +275,26 @@ def _describe_tempo_impact(color: str, reason: str) -> str:
     return f"Décision : {reason}"
 
 
+class PoolWaterTemperatureSensor(PoolBaseSensor):
+    """Current water temperature sensor."""
+
+    _attr_name = "Température Piscine"
+    _attr_icon = "mdi:thermometer"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 1
+
+    @property
+    def unique_id(self):
+        return f"{self._entry.entry_id}_water_temp"
+
+    @property
+    def native_value(self):
+        """Return current water temperature, or None if not available."""
+        data = self.coordinator.data or {}
+        return data.get("water_temp")
+
+
 class PoolWaterHeaterSensor(PoolBaseSensor):
     """
     Water heater (ballon ECS) priority status sensor.
@@ -274,7 +303,7 @@ class PoolWaterHeaterSensor(PoolBaseSensor):
     required before the pool pump is allowed to claim solar surplus.
     """
 
-    _attr_name = "Priorité Ballon ECS sur filtration"
+    _attr_name = "Température Ballon ECS"
     _attr_icon = "mdi:water-boiler"
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = "°C"

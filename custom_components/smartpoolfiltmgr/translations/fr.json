@@ -39,7 +39,7 @@
 
           "pump_start_power_threshold": "Activer la pompe si consommation réseau < (en plage solaire)",
           "accepted_conso": "Arreter la pompe si consommation réseau > (en plage solaire)",
-          "accepted_conso_bleu": "Arreter la pompe si consommation réseau > (en plage solaire jour Bleu)",
+          "accepted_conso_bleu": "Arreter la pompe si consommation réseau > (hors jour Blanc et Rouge)",
           "accepted_conso_blanc": "Arreter la pompe si consommation réseau > (en plage solaire jour Blanc)",
           "accepted_conso_rouge": "Arreter la pompe si consommation réseau > (en plage solaire jour Rouges)",
 

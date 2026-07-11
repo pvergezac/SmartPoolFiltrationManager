@@ -724,6 +724,14 @@ class PoolFiltrationCoordinator(DataUpdateCoordinator):
             self._hc_contribution_minutes = 0.0
             self._last_reset_date = today
 
+            # Arrete la pompe si elle est en marche pour eviter de depasser
+            # le temps de filtration journalier
+            if self.mode == MODE_AUTO and self._pump_running:
+                _LOGGER.info("Daily reset: stopping pump at midnight")
+                self.hass.async_create_task(self._set_pump(False))
+                self._pump_running = False
+                self._run_start = None
+
     # ------------------------------------------------------------------
     # Update loop
     # ------------------------------------------------------------------
